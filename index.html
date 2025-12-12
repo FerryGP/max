@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>三年级上册语文互动闯关平台 V8.2 (最终修复版)</title>
+    <title>三年级上册语文互动闯关平台 V9.0 (终极完美版)</title>
     <!-- 引入 React 和 Tailwind CSS -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
@@ -57,10 +57,9 @@
         const Eye = (props) => <Icon {...props} path={<><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></>} />;
         const Mountain = (props) => <Icon {...props} path={<><path d="m8 3 4 8 5-5 5 15H2L8 3z"/></>} />;
         const Music = (props) => <Icon {...props} path={<><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></>} />;
+        const Heart = (props) => <Icon {...props} path={<><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></>} />;
         const BookX = (props) => <Icon {...props} path={<><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><path d="m14.5 9-5 5"/><path d="m9.5 9 5 5"/></>} />;
         const Trash2 = (props) => <Icon {...props} path={<><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></>} />;
-        // 修复：添加 Heart 图标定义
-        const Heart = (props) => <Icon {...props} path={<><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></>} />;
 
         // --- 音效工具 ---
         const playSound = (type) => {
@@ -93,7 +92,7 @@
             }
         };
 
-        // --- 核心数据结构：单元库 (全本完整版 V7.0) ---
+        // --- 核心数据结构：单元库 (全本完整版 V9.0) ---
         const UNIT_DATABASE = [
             {
                 id: 'unit1', title: '第一单元', subtitle: '学校生活 · 大自然', status: 'unlocked', icon: <Feather size={32} />, color: 'from-green-400 to-emerald-600',
@@ -237,8 +236,7 @@
                     ]}
                 ]
             },
-            // ... Unit 3 to 6 are consistent with previous version ...
-            { id: 'unit3', title: '第三单元', subtitle: '童话世界 · 想象', status: 'unlocked', icon: <Sun size={32} />, color: 'from-blue-400 to-indigo-600', stages: [{id:'stage1', title:'第一关：童话拼音堡', type:'choice', questions:[{id:'p1', question:'门____', highlight:'____', options:['fèng','féng'], correct:'fèng'},{id:'p2', question:'茶____', highlight:'____', options:['jī','jǐ'], correct:'jī'},{id:'p3', question:'____哩', highlight:'____', options:['gū','gu'], correct:'gū'},{id:'p4', question:'____礼', highlight:'____', options:['hūn','hūn'], correct:'hūn'},{id:'p5', question:'____厌', highlight:'____', options:['tǎo','táo'], correct:'tǎo'},{id:'m1', question:'这个问题真____回答。', highlight:'____', options:['nán','nàn'], correct:'nán'},{id:'m2', question:'我们遇到了一场灾____。', highlight:'____', options:['nán','nàn'], correct:'nàn'},{id:'m3', question:'这根绳子打了个____。', highlight:'____', options:['jié','jiē'], correct:'jié'},{id:'m4', question:'树上____满了果子。', highlight:'____', options:['jié','jiē'], correct:'jiē'},{id:'m5', question:'这____是真的吗？', highlight:'____', options:['shì','sì'], correct:'shì'},{id:'m6', question:'他中了子____。', highlight:'____', options:['dàn','tán'], correct:'dàn'}]},{id:'stage2', title:'第二关：汉字双胞胎', type:'choice', questions:[{id:'c1', question:'我们要____备好明天的功课。', highlight:'____', options:['准','难'], correct:'准'},{id:'c2', question:'这是一家古老的____庙。', highlight:'____', options:['等','寺'], correct:'寺'},{id:'c3', question:'我们要____待客人。', highlight:'____', options:['招','待'], correct:'待'},{id:'c4', question:'吃____了才有力气干活。', highlight:'____', options:['饱','抱'], correct:'饱'},{id:'c5', question:'妈妈给了我一个拥____。', highlight:'____', options:['饱','抱'], correct:'抱'},{id:'c6', question:'这个西瓜的____子真大。', highlight:'____', options:['肚','杜'], correct:'肚'}]},{id:'stage3', title:'第三关：词语对对碰', type:'match', pairs:[{left:'准备', right:'预备'},{left:'安心', right:'放心'},{left:'飞快', right:'飞速'},{left:'讨厌', right:'厌恶'},{left:'安心', right:'担心'},{left:'容易', right:'困难'},{left:'清醒', right:'糊涂'},{left:'讨厌', right:'喜欢'}]},{id:'stage4', title:'第四关：声音模仿秀', type:'match', pairs:[{left:'牛', right:'哞哞'},{left:'公鸡', right:'喔喔'},{left:'母鸡', right:'咯咯'},{left:'小狗', right:'汪汪'},{left:'小鸭', right:'嘎嘎'},{left:'青蛙', right:'呱呱'},{left:'杜鹃', right:'咕咕'},{left:'喜鹊', right:'喳喳'}]},{id:'stage5', title:'第五关：童话搭配师', type:'match', pairs:[{left:'小小的', right:'声音'},{left:'美丽的', right:'早晨'},{left:'古老的', right:'树'},{left:'又大又漂亮的', right:'网'},{left:'飞快地', right:'爬'},{left:'偷偷', right:'地看'},{left:'瞪着', right:'双眼'},{left:'热热闹闹的', right:'婚礼'}]},{id:'stage6', title:'第六关：国学经典', type:'choice', questions:[{id:'q1', question:'____，不贰过。（论语）', highlight:'____', options:['不迁怒','不生气'], correct:'不迁怒'},{id:'q2', question:'爱人若____。（墨子）', highlight:'____', options:['爱其身','爱自己'], correct:'爱其身'},{id:'q3', question:'仁者爱人，有礼者____。（孟子）', highlight:'____', options:['敬人','助人'], correct:'敬人'},{id:'q4', question:'与人善言，暖于____。（荀子）', highlight:'____', options:['布帛','棉被'], correct:'布帛'}]}]},
+            { id: 'unit3', title: '第三单元', subtitle: '童话世界 · 想象', status: 'unlocked', icon: <Sun size={32} />, color: 'from-blue-400 to-indigo-600', stages: [{id:'stage1', title:'第一关：童话拼音堡', type:'choice', questions:[{id:'p1', question:'门____', highlight:'____', options:['fèng','féng'], correct:'fèng'},{id:'p2', question:'茶____', highlight:'____', options:['jī','jǐ'], correct:'jī'},{id:'p3', question:'____哩', highlight:'____', options:['gū','gu'], correct:'gū'},{id:'p4', question:'____礼', highlight:'____', options:['hūn','hùn'], correct:'hūn'},{id:'p5', question:'____厌', highlight:'____', options:['tǎo','táo'], correct:'tǎo'},{id:'m1', question:'这个问题真____回答。', highlight:'____', options:['nán','nàn'], correct:'nán'},{id:'m2', question:'我们遇到了一场灾____。', highlight:'____', options:['nán','nàn'], correct:'nàn'},{id:'m3', question:'这根绳子打了个____。', highlight:'____', options:['jié','jiē'], correct:'jié'},{id:'m4', question:'树上____满了果子。', highlight:'____', options:['jié','jiē'], correct:'jiē'},{id:'m5', question:'这____是真的吗？', highlight:'____', options:['shì','sì'], correct:'shì'},{id:'m6', question:'他中了子____。', highlight:'____', options:['dàn','tán'], correct:'dàn'}]},{id:'stage2', title:'第二关：汉字双胞胎', type:'choice', questions:[{id:'c1', question:'我们要____备好明天的功课。', highlight:'____', options:['准','难'], correct:'准'},{id:'c2', question:'这是一家古老的____庙。', highlight:'____', options:['等','寺'], correct:'寺'},{id:'c3', question:'我们要____待客人。', highlight:'____', options:['招','待'], correct:'待'},{id:'c4', question:'吃____了才有力气干活。', highlight:'____', options:['饱','抱'], correct:'饱'},{id:'c5', question:'妈妈给了我一个拥____。', highlight:'____', options:['饱','抱'], correct:'抱'},{id:'c6', question:'这个西瓜的____子真大。', highlight:'____', options:['肚','杜'], correct:'肚'}]},{id:'stage3', title:'第三关：词语对对碰', type:'match', pairs:[{left:'准备', right:'预备'},{left:'安心', right:'放心'},{left:'飞快', right:'飞速'},{left:'讨厌', right:'厌恶'},{left:'安心', right:'担心'},{left:'容易', right:'困难'},{left:'清醒', right:'糊涂'},{left:'讨厌', right:'喜欢'}]},{id:'stage4', title:'第四关：声音模仿秀', type:'match', pairs:[{left:'牛', right:'哞哞'},{left:'公鸡', right:'喔喔'},{left:'母鸡', right:'咯咯'},{left:'小狗', right:'汪汪'},{left:'小鸭', right:'嘎嘎'},{left:'青蛙', right:'呱呱'},{left:'杜鹃', right:'咕咕'},{left:'喜鹊', right:'喳喳'}]},{id:'stage5', title:'第五关：童话搭配师', type:'match', pairs:[{left:'小小的', right:'声音'},{left:'美丽的', right:'早晨'},{left:'古老的', right:'树'},{left:'又大又漂亮的', right:'网'},{left:'飞快地', right:'爬'},{left:'偷偷', right:'地看'},{left:'瞪着', right:'双眼'},{left:'热热闹闹的', right:'婚礼'}]},{id:'stage6', title:'第六关：国学经典', type:'choice', questions:[{id:'q1', question:'____，不贰过。（论语）', highlight:'____', options:['不迁怒','不生气'], correct:'不迁怒'},{id:'q2', question:'爱人若____。（墨子）', highlight:'____', options:['爱其身','爱自己'], correct:'爱其身'},{id:'q3', question:'仁者爱人，有礼者____。（孟子）', highlight:'____', options:['敬人','助人'], correct:'敬人'},{id:'q4', question:'与人善言，暖于____。（荀子）', highlight:'____', options:['布帛','棉被'], correct:'布帛'}]}]},
             { id: 'unit4', title: '第四单元', subtitle: '策略 · 预测', status: 'unlocked', icon: <Cloud size={32} />, color: 'from-purple-400 to-pink-500', stages: [{id:'stage1', title:'第一关：策略拼音林', type:'choice', questions:[{id:'p1', question:'规____', highlight:'____', options:['jǔ','jù'], correct:'jǔ'},{id:'p2', question:'支____', highlight:'____', options:['chēng','chēn'], correct:'chēng'},{id:'p3', question:'____慢', highlight:'____', options:['màn','mān'], correct:'màn'},{id:'p4', question:'____人', highlight:'____', options:['yòu','xiù'], correct:'yòu'},{id:'m1', question:'他一____烟跑了。', highlight:'____', options:['liù','liū'], correct:'liù'},{id:'m2', question:'我们去____冰吧。', highlight:'____', options:['liū','liù'], correct:'liū'},{id:'m3', question:'你应该____应他。', highlight:'____', options:['dā','dá'], correct:'dā'},{id:'m4', question:'请回____我的问题。', highlight:'____', options:['dá','dā'], correct:'dá'},{id:'m5', question:'这里到____都是垃圾。', highlight:'____', options:['chù','chǔ'], correct:'chù'},{id:'m6', question:'这件事情很难____理。', highlight:'____', options:['chǔ','chù'], correct:'chǔ'}]},{id:'stage2', title:'第二关：形近字大比拼', type:'choice', questions:[{id:'c1', question:'我们要____养好习惯。', highlight:'____', options:['培','陪'], correct:'培'},{id:'c2', question:'我不小心打破了花瓶，要____偿。', highlight:'____', options:['赔','培'], correct:'赔'},{id:'c3', question:'这是一个____形。', highlight:'____', options:['矩','拒'], correct:'矩'},{id:'c4', question:'我们不能拒____别人的好意。', highlight:'____', options:['绝','矩'], correct:'绝'},{id:'c5', question:'小狗摇着____巴。', highlight:'____', options:['尾','层'], correct:'尾'},{id:'c6', question:'这栋楼有三十____高。', highlight:'____', options:['层','尾'], correct:'层'},{id:'c7', question:'我喜欢吃大____。', highlight:'____', options:['饼','拼'], correct:'饼'},{id:'c8', question:'我们一起来____图。', highlight:'____', options:['拼','饼'], correct:'拼'}]},{id:'stage3', title:'第三关：词语大挑战', type:'match', pairs:[{left:'普通', right:'特殊'},{left:'悲哀', right:'喜悦'},{left:'勇敢', right:'胆怯'},{left:'集合', right:'解散'},{left:'可怜', right:'巴巴'},{left:'怒气', right:'冲冲'},{left:'神采', right:'奕奕'},{left:'得意', right:'扬扬'}]},{id:'stage4', title:'第四关：数字成语王', type:'choice', questions:[{id:'n1', question:'形容射箭或枪法非常准。', highlight:'成语', options:['百发百中','百战百胜'], correct:'百发百中'},{id:'n2', question:'形容交通非常便利。', highlight:'成语', options:['四通八达','四面八方'], correct:'四通八达'},{id:'n3', question:'形容做事非常稳当。', highlight:'成语', options:['四平八稳','七上八下'], correct:'四平八稳'},{id:'n4', question:'形容心里慌乱不安。', highlight:'成语', options:['七上八下','七嘴八舌'], correct:'七上八下'},{id:'n5', question:'形容人多嘴杂，说个不停。', highlight:'成语', options:['七嘴八舌','百依百顺'], correct:'七嘴八舌'}]},{id:'stage5', title:'第五关：团结大智慧', type:'match', pairs:[{left:'人心齐', right:'泰山移'},{left:'二人同心', right:'其利断金'},{left:'三个臭皮匠', right:'顶个诸葛亮'},{left:'一个篱笆三个桩', right:'一个好汉三个帮'}]}]},
             { id: 'unit5', title: '第五单元', subtitle: '观察 · 发现', status: 'unlocked', icon: <Eye size={32} />, color: 'from-teal-400 to-green-600', stages: [{id:'stage1', title:'第一关：观察小达人', type:'choice', questions:[{id:'p1', question:'玩____', highlight:'____', options:['shuǎ','yào'], correct:'shuǎ'},{id:'p2', question:'合____', highlight:'____', options:['lǒng','lóng'], correct:'lǒng'},{id:'p3', question:'____公英', highlight:'____', options:['pú','pǔ'], correct:'pú'},{id:'p4', question:'____鸟', highlight:'____', options:['cuì','cuī'], correct:'cuì'},{id:'p5', question:'____鱼', highlight:'____', options:['bǔ','pǔ'], correct:'bǔ'},{id:'p6', question:'____接', highlight:'____', options:['xián','jiē'], correct:'xián'},{id:'m1', question:'好____！', highlight:'____', options:['la','lā'], correct:'la'},{id:'m2', question:'呼____', highlight:'____', options:['lā','la'], correct:'lā'},{id:'m3', question:'静____', highlight:'____', options:['qiāo','qiǎo'], correct:'qiāo'},{id:'m4', question:'____然无声', highlight:'____', options:['qiǎo','qiāo'], correct:'qiǎo'},{id:'m5', question:'昌____', highlight:'____', options:['shèng','chéng'], correct:'shèng'},{id:'m6', question:'____饭', highlight:'____', options:['chéng','shèng'], correct:'chéng'}]},{id:'stage2', title:'第二关：字形辨辨辨', type:'choice', questions:[{id:'c1', question:'山____上开满了野花。', highlight:'____', options:['坡','披'], correct:'坡'},{id:'c2', question:'爷爷____着一件蓑衣。', highlight:'____', options:['披','坡'], correct:'披'},{id:'c3', question:'柳树的树____发芽了。', highlight:'____', options:['梢','悄'], correct:'梢'},{id:'c4', question:'他静____地走了。', highlight:'____', options:['悄','梢'], correct:'悄'},{id:'c5', question:'这首____谣真好听。', highlight:'____', options:['歌','哥'], correct:'歌'},{id:'c6', question:'不要在马路上玩____。', highlight:'____', options:['耍','要'], correct:'耍'},{id:'c7', question:'这件事情很重____。', highlight:'____', options:['要','耍'], correct:'要'},{id:'c8', question:'妈妈在____脸。', highlight:'____', options:['洗','拣'], correct:'洗'},{id:'c9', question:'我在地上____起一支笔。', highlight:'____', options:['捡','脸'], correct:'捡'}]},{id:'stage3', title:'第三关：词语万花筒', type:'match', pairs:[{left:'用力', right:'使劲'},{left:'美丽', right:'漂亮'},{left:'快乐', right:'愉快'},{left:'观察', right:'察看'},{left:'美丽', right:'丑陋'},{left:'盛开', right:'凋谢'},{left:'仔细', right:'粗心'},{left:'静悄悄', right:'闹哄哄'}]},{id:'stage4', title:'第四关：色彩与搭配', type:'match', pairs:[{left:'翠绿的', right:'羽毛'},{left:'红色的', right:'长嘴'},{left:'金色的', right:'草地'},{left:'可爱的', right:'草地'},{left:'有趣的', right:'蒲公英'},{left:'用力', right:'地摇'},{left:'仔细', right:'观察'},{left:'一本', right:'正经'}]},{id:'stage5', title:'第五关：阅读理解《金色的草地》', type:'choice', questions:[{id:'r1', question:'草地早晨是什么颜色的？', highlight:'早晨', options:['绿色','金色'], correct:'绿色'},{id:'r2', question:'草地中午是什么颜色的？', highlight:'中午', options:['金色','绿色'], correct:'金色'},{id:'r3', question:'草地晚上是什么颜色的？', highlight:'晚上', options:['绿色','红色'], correct:'绿色'},{id:'r4', question:'草地变色的原因是蒲公英的花瓣____。', highlight:'____', options:['张开和合拢','凋谢了'], correct:'张开和合拢'}]}]},
             { id: 'unit6', title: '第六单元', subtitle: '祖国河山 · 瑰丽', status: 'unlocked', icon: <Mountain size={32} />, color: 'from-cyan-500 to-blue-700', stages: [{id:'stage1', title:'第一关：风光拼音岛', type:'choice', questions:[{id:'p1', question:'富____', highlight:'____', options:['ráo','rǎo'], correct:'ráo'},{id:'p2', question:'海____', highlight:'____', options:['shēn','cān'], correct:'shēn'},{id:'p3', question:'沉____', highlight:'____', options:['jìn','qìn'], correct:'jìn'},{id:'p4', question:'胳____', highlight:'____', options:['bei','bì'], correct:'bei'},{id:'p5', question:'理____', highlight:'____', options:['cǎi','cāi'], correct:'cǎi'},{id:'p6', question:'____化', highlight:'____', options:['róng','yóng'], correct:'róng'},{id:'p7', question:'海____', highlight:'____', options:['bīn','bīng'], correct:'bīn'},{id:'p8', question:'____色', highlight:'____', options:['jué','jiǎo'], correct:'jué'}]},{id:'stage2', title:'第二关：多音字大挑战', type:'choice', questions:[{id:'m1', question:'人____', highlight:'____', options:['shēn','cān'], correct:'shēn'},{id:'m2', question:'____加', highlight:'____', options:['cān','shēn'], correct:'cān'},{id:'m3', question:'____奋', highlight:'____', options:['xīng','xìng'], correct:'xīng'},{id:'m4', question:'____趣', highlight:'____', options:['xìng','xīng'], correct:'xìng'},{id:'m5', question:'____舍', highlight:'____', options:['shè','shě'], correct:'shè'},{id:'m6', question:'____得', highlight:'____', options:['shě','shè'], correct:'shě'},{id:'m7', question:'胳____', highlight:'____', options:['bei','bì'], correct:'bei'},{id:'m8', question:'手____', highlight:'____', options:['bì','bei'], correct:'bì'}]},{id:'stage3', title:'第三关：词语对对碰', type:'match', pairs:[{left:'瑰丽', right:'奇丽'},{left:'喧闹', right:'喧嚣'},{left:'诱人', right:'迷人'},{left:'庞大', right:'巨大'},{left:'富饶', right:'贫瘠'},{left:'整洁', right:'邋遢'},{left:'巨大', right:'微小'},{left:'成群结队', right:'形单影只'}]},{id:'stage4', title:'第四关：风景搭配师', type:'match', pairs:[{left:'各种各样的', right:'珊瑚'},{left:'绽开的', right:'花朵'},{left:'分枝的', right:'鹿角'},{left:'彩色的', right:'条纹'},{left:'茂密的', right:'树林'},{left:'浩瀚的', right:'大海'},{left:'寂寞地', right:'躺'},{left:'宝贵的', right:'肥料'}]},{id:'stage5', title:'第五关：古诗《早发白帝城》', type:'poem', lines:[{text:'朝辞白帝', blank:'彩云间', options:['彩云间','白云间','紫云间']},{text:'千里江陵', blank:'一日还', options:['一日还','二日还','三日还']},{text:'两岸猿声', blank:'啼不住', options:['啼不住','叫不住','喊不住']},{text:'轻舟已过', blank:'万重山', options:['万重山','千重山','百重山']}]}]},
@@ -618,43 +616,67 @@
         };
 
         const MatchStage = ({ data, onComplete, soundEnabled, onWrong }) => {
-            const [pairs, setPairs] = useState([]);
-            const [leftItems, setLeftItems] = useState([]);
-            const [rightItems, setRightItems] = useState([]);
-            const [selectedLeft, setSelectedLeft] = useState(null);
-            const [matched, setMatched] = useState([]); 
+            const [gameItems, setGameItems] = useState({ left: [], right: [] });
+            const [selectedLeftId, setSelectedLeftId] = useState(null);
+            const [matchedIds, setMatchedIds] = useState([]); 
             const [wrongShake, setWrongShake] = useState(false);
 
             useEffect(() => {
-                const shuffledPairs = [...data.pairs].sort(() => Math.random() - 0.5);
-                setPairs(shuffledPairs);
-                setLeftItems(shuffledPairs.map(p => p.left).sort(() => Math.random() - 0.5));
-                setRightItems(shuffledPairs.map(p => p.right).sort(() => Math.random() - 0.5));
+                // Generate items with unique IDs based on index
+                const newLeft = data.pairs.map((p, idx) => ({
+                    id: `L_${idx}`,
+                    text: p.left,
+                    pairId: idx
+                })).sort(() => Math.random() - 0.5);
+
+                const newRight = data.pairs.map((p, idx) => ({
+                    id: `R_${idx}`,
+                    text: p.right,
+                    pairId: idx
+                })).sort(() => Math.random() - 0.5);
+
+                setGameItems({ left: newLeft, right: newRight });
+                setMatchedIds([]);
+                setSelectedLeftId(null);
             }, [data]);
 
-            const handleLeftClick = (item) => { if (!matched.includes(item)) { setSelectedLeft(item); setWrongShake(false); } };
+            const handleLeftClick = (item) => {
+                if (matchedIds.includes(item.id)) return;
+                setSelectedLeftId(item.id);
+                setWrongShake(false);
+            };
+
             const handleRightClick = (item) => {
-                if (matched.includes(item) || !selectedLeft) return;
-                const correctPair = pairs.find(p => p.left === selectedLeft && p.right === item);
-                if (correctPair) {
+                if (matchedIds.includes(item.id)) return;
+                if (!selectedLeftId) return;
+
+                // Find the left item object to compare pairIds
+                const leftItem = gameItems.left.find(l => l.id === selectedLeftId);
+                
+                if (leftItem && leftItem.pairId === item.pairId) {
+                    // Correct match
                     if (soundEnabled) playSound('correct');
-                    const newMatched = [...matched, selectedLeft, item];
-                    setMatched(newMatched); setSelectedLeft(null);
-                    if (newMatched.length === pairs.length * 2) setTimeout(() => onComplete(pairs.length), 1000);
+                    const newMatchedIds = [...matchedIds, leftItem.id, item.id];
+                    setMatchedIds(newMatchedIds);
+                    setSelectedLeftId(null);
+                    
+                    if (newMatchedIds.length === data.pairs.length * 2) {
+                        setTimeout(() => onComplete(data.pairs.length), 1000);
+                    }
                 } else {
+                    // Wrong match
                     if (soundEnabled) playSound('wrong');
                     
-                    // 找到这个错误选项应该对应的正确左边（如果它有）或者 只是记录这次错误匹配
-                    // 记录：用户把 selectedLeft 连给了 item (错误)
-                    // 正确应该是：selectedLeft -> correctRight
-                    const correctRight = pairs.find(p => p.left === selectedLeft)?.right;
+                    // Record wrong answer
                     onWrong({
-                        question: `连线：${selectedLeft}`,
-                        correct: correctRight,
-                        yourAnswer: item
+                        question: `连线：${leftItem.text}`,
+                        correct: data.pairs[leftItem.pairId].right,
+                        yourAnswer: item.text
                     });
 
-                    setWrongShake(true); setTimeout(() => setWrongShake(false), 500); setSelectedLeft(null);
+                    setWrongShake(true); 
+                    setTimeout(() => setWrongShake(false), 500); 
+                    setSelectedLeftId(null);
                 }
             };
 
@@ -663,13 +685,37 @@
                     <h3 className="text-xl text-gray-600 mb-6 mt-4 font-medium bg-white px-6 py-2 rounded-full shadow-sm">请点击左边的词，再点击右边连线</h3>
                     <div className="flex justify-between w-full gap-8 md:gap-12 flex-1 overflow-y-auto p-2">
                         <div className="flex-1 flex flex-col gap-3 md:gap-4">
-                            {leftItems.map((item, idx) => (
-                                <button key={idx} onClick={() => handleLeftClick(item)} className={`p-3 md:p-4 rounded-xl text-lg font-bold shadow-sm border-2 transition-all duration-200 ${matched.includes(item) ? 'bg-gray-50 text-gray-300 border-gray-100 cursor-default scale-95' : 'bg-white text-blue-600 border-blue-100 hover:border-blue-400 hover:shadow-md'} ${selectedLeft === item ? 'bg-blue-50 border-blue-500 scale-105 ring-2 ring-blue-200' : ''}`}>{item}</button>
+                            {gameItems.left.map((item) => (
+                                <button 
+                                    key={item.id} 
+                                    onClick={() => handleLeftClick(item)} 
+                                    className={`
+                                        p-3 md:p-4 rounded-xl text-lg font-bold shadow-sm border-2 transition-all duration-200 
+                                        ${matchedIds.includes(item.id) 
+                                            ? 'bg-gray-50 text-gray-300 border-gray-100 cursor-default scale-95' 
+                                            : 'bg-white text-blue-600 border-blue-100 hover:border-blue-400 hover:shadow-md'} 
+                                        ${selectedLeftId === item.id ? 'bg-blue-50 border-blue-500 scale-105 ring-2 ring-blue-200' : ''}
+                                    `}
+                                >
+                                    {item.text}
+                                </button>
                             ))}
                         </div>
                         <div className="flex-1 flex flex-col gap-3 md:gap-4">
-                            {rightItems.map((item, idx) => (
-                                <button key={idx} onClick={() => handleRightClick(item)} className={`p-3 md:p-4 rounded-xl text-lg font-bold shadow-sm border-2 transition-all duration-200 ${matched.includes(item) ? 'bg-green-50 text-green-300 border-green-100 cursor-default scale-95' : 'bg-white text-green-700 border-green-100 hover:border-green-400 hover:shadow-md'} ${wrongShake ? 'animate-shake bg-red-50 border-red-300' : ''}`}>{item}</button>
+                            {gameItems.right.map((item) => (
+                                <button 
+                                    key={item.id} 
+                                    onClick={() => handleRightClick(item)} 
+                                    className={`
+                                        p-3 md:p-4 rounded-xl text-lg font-bold shadow-sm border-2 transition-all duration-200 
+                                        ${matchedIds.includes(item.id) 
+                                            ? 'bg-green-50 text-green-300 border-green-100 cursor-default scale-95' 
+                                            : 'bg-white text-green-700 border-green-100 hover:border-green-400 hover:shadow-md'} 
+                                        ${wrongShake ? 'animate-shake bg-red-50 border-red-300' : ''}
+                                    `}
+                                >
+                                    {item.text}
+                                </button>
                             ))}
                         </div>
                     </div>
