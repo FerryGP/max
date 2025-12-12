@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>三年级上册第一单元互动测试（全考点版）</title>
+    <title>三年级上册第一单元互动测试（形近字难度升级版）</title>
     <!-- 引入 React 和 Tailwind CSS -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
@@ -75,15 +75,14 @@
             }
         };
 
-        // --- 完整题库 (56个考点) ---
+        // --- 完整题库 (重新校对修正版) ---
         const QUIZ_DATA = [
             {
                 id: 'stage1',
-                title: '第一关：拼音大闯关',
+                title: '第一关：拼音大闯关 (1/8)',
                 description: '易错读音和多音字 (16个点)',
                 type: 'choice',
                 questions: [
-                    // 12个易错音
                     { id: 'p1', question: '荒野', highlight: '荒', options: ['huāng', 'hāng'], correct: 'huāng' },
                     { id: 'p2', question: '粗壮', highlight: '粗', options: ['chū', 'cū'], correct: 'cū' },
                     { id: 'p3', question: '摇晃', highlight: '晃', options: ['huàng', 'huǎng'], correct: 'huàng' },
@@ -93,10 +92,9 @@
                     { id: 'p7', question: '戒尺', highlight: '戒', options: ['jiè', 'jià'], correct: 'jiè' },
                     { id: 'p8', question: '墙壁', highlight: '壁', options: ['bì', 'pì'], correct: 'bì' },
                     { id: 'p9', question: '因为', highlight: '为', options: ['wéi', 'wèi'], correct: 'wèi' },
-                    { id: 'p10', question: '清楚', highlight: '楚', options: ['chǔ', 'chu'], correct: 'chu' }, // 轻声
+                    { id: 'p10', question: '清楚', highlight: '楚', options: ['chǔ', 'chu'], correct: 'chu' },
                     { id: 'p11', question: '凤尾竹', highlight: '凤', options: ['fèng', 'fòng'], correct: 'fèng' },
                     { id: 'p12', question: '绒球花', highlight: '绒', options: ['róng', 'yóng'], correct: 'róng' },
-                    // 4个多音字
                     { id: 'm1', question: '放假', highlight: '假', options: ['jià', 'jiǎ'], correct: 'jià' },
                     { id: 'm2', question: '挨家挨户', highlight: '挨', options: ['āi', 'ái'], correct: 'āi' },
                     { id: 'm3', question: '羊圈', highlight: '圈', options: ['juàn', 'quān'], correct: 'juàn' },
@@ -105,33 +103,33 @@
             },
             {
                 id: 'stage2',
-                title: '第二关：形近字对对碰',
-                description: '选出正确的汉字 (9组)',
+                title: '第二关：形近字大考验 (2/8)',
+                description: '结合句子语境选字 (难度升级)',
                 type: 'choice',
                 questions: [
-                    { id: 'c1', question: '__润 (wēn/shī)', highlight: '__', options: ['湿', '温'], correct: '湿' },
-                    { id: 'c2', question: '__利 (hàn/quán)', highlight: '__', options: ['汉', '权'], correct: '权' },
-                    { id: 'c3', question: '背__ (sòng/tōng)', highlight: '__', options: ['诵', '通'], correct: '诵' },
-                    { id: 'c4', question: '__月 (rùn/rùn)', highlight: '__', options: ['润', '闰'], correct: '闰' },
-                    { id: 'c5', question: '__唤 (zhāo/zhào)', highlight: '__', options: ['招', '召'], correct: '召' },
-                    { id: 'c6', question: '__心 (lì/piān)', highlight: '__', options: ['例', '偏'], correct: '偏' },
-                    { id: 'c7', question: '汽__ (dí/yóu)', highlight: '__', options: ['笛', '邮'], correct: '笛' },
-                    { id: 'c8', question: '时__ (zhōng/chōng)', highlight: '__', options: ['钟', '冲'], correct: '钟' },
-                    { id: 'c9', question: '__欢 (kuáng/wàng)', highlight: '__', options: ['狂', '旺'], correct: '狂' }
+                    { id: 'c1', question: '雨后的空气十分潮__。', highlight: '__', options: ['温', '湿'], correct: '湿' },
+                    { id: 'c2', question: '这是我的合法__利，你不能剥夺。', highlight: '__', options: ['汉', '权'], correct: '权' },
+                    { id: 'c3', question: '早读课上，大家都在朗__课文。', highlight: '__', options: ['通', '诵'], correct: '诵' },
+                    { id: 'c4', question: '春雨滋__着大地，花草喝足了水。', highlight: '__', options: ['闰', '润'], correct: '润' },
+                    { id: 'c5', question: '祖国在__唤我们去建设未来。', highlight: '__', options: ['招', '召'], correct: '召' },
+                    { id: 'c6', question: '老师举了很多__子来解释这个词。', highlight: '__', options: ['偏', '例'], correct: '例' },
+                    { id: 'c7', question: '我要去__局给远方的朋友寄信。', highlight: '__', options: ['笛', '邮'], correct: '邮' },
+                    { id: 'c8', question: '做事要冷静，千万不要__动。', highlight: '__', options: ['钟', '冲'], correct: '冲' },
+                    { id: 'c9', question: '篝火燃烧得非常__，映红了大家的脸。', highlight: '__', options: ['狂', '旺'], correct: '旺' }
                 ]
             },
             {
                 id: 'stage3',
-                title: '第三关：词语大变身',
-                description: '近义词与反义词',
+                title: '第三关：词语大变身 (3/8)',
+                description: '近义词与简单反义词',
                 type: 'match',
                 pairs: [
-                    // 近义词 (4组)
+                    // 近义词
                     { left: '许多', right: '众多' },
                     { left: '粗壮', right: '粗大' },
                     { left: '飘扬', right: '飘动' },
                     { left: '突然', right: '忽然' },
-                    // 反义词部分1 (8组分两批，这里放4组)
+                    // 简单反义词
                     { left: '罚', right: '赏' },
                     { left: '古老', right: '年轻' },
                     { left: '认真', right: '马虎' },
@@ -140,44 +138,54 @@
             },
             {
                 id: 'stage4',
-                title: '第四关：反义词挑战',
-                description: '难度升级的反义词',
+                title: '第四关：反义词挑战 (4/8)',
+                description: '难度升级的纯反义词 (不再混淆)',
                 type: 'match',
                 pairs: [
-                    // 反义词部分2
                     { left: '湿润', right: '干燥' },
                     { left: '有趣', right: '乏味' },
                     { left: '流利', right: '生涩' },
                     { left: '详细', right: '简略' },
-                    // 混入搭配 (6组)
-                    { left: '欢唱的', right: '小鸟' },
-                    { left: '敬爱的', right: '老师' },
-                    { left: '可爱的', right: '学校' },
-                    { left: '古老的', right: '铜钟' }
+                    { left: '热闹', right: '冷清' },
+                    { left: '清楚', right: '糊涂' }
                 ]
             },
             {
                 id: 'stage5',
-                title: '第五关：成语与搭配',
-                description: '成语运用与剩余搭配',
-                type: 'choice',
-                questions: [
-                    { id: 'da1', question: '选择搭配：____的枝干', highlight: '____', options: ['粗壮', '洁白'], correct: '粗壮' },
-                    { id: 'da2', question: '选择搭配：____的墙', highlight: '____', options: ['洁白', '古老'], correct: '洁白' },
-                    // 7个成语
-                    { id: 'i1', question: '小月____地念着古诗。', highlight: '____', options: ['摇头晃脑', '披头散发'], correct: '摇头晃脑' },
-                    { id: 'i2', question: '童话里的女巫总是____。', highlight: '____', options: ['披头散发', '张牙舞爪'], correct: '披头散发' },
-                    { id: 'i3', question: '大螃蟹____的，好像在示威。', highlight: '____', options: ['张牙舞爪', '手疾眼快'], correct: '张牙舞爪' },
-                    { id: 'i4', question: '他们争得____。', highlight: '____', options: ['面红耳赤', '口干舌燥'], correct: '面红耳赤' },
-                    { id: 'i5', question: '快迟到了，他____地穿衣服。', highlight: '____', options: ['手忙脚乱', '急急忙忙'], correct: '手忙脚乱' },
-                    { id: 'i6', question: '我____地接住了掉落的花瓶。', highlight: '____', options: ['眼疾手快', '提心吊胆'], correct: '眼疾手快' },
-                    { id: 'i7', question: '辩论赛后，我感到____。', highlight: '____', options: ['口干舌燥', '鸦雀无声'], correct: '口干舌燥' }
+                title: '第五关：词语黄金搭档 (5/8)',
+                description: '专门练习“怎样的什么” (搭配)',
+                type: 'match',
+                pairs: [
+                    { left: '欢唱的', right: '小鸟' },
+                    { left: '敬爱的', right: '老师' },
+                    { left: '可爱的', right: '小学' },
+                    { left: '古老的', right: '铜钟' },
+                    { left: '粗壮的', right: '枝干' },
+                    { left: '洁白的', right: '墙' },
+                    { left: '簌簌地', right: '响' },
+                    { left: '好奇地', right: '听着' }
                 ]
             },
             {
                 id: 'stage6',
-                title: '第六关：古诗神殿',
-                description: '《所见》全诗背诵与理解',
+                title: '第六关：成语大闯关 (6/8)',
+                description: '根据意思选成语',
+                type: 'choice',
+                questions: [
+                    { id: 'i1', question: '小月____地念着古诗。', highlight: '____', options: ['摇头晃脑', '披头散发'], correct: '摇头晃脑' },
+                    { id: 'i2', question: '童话里的女巫总是____。', highlight: '____', options: ['披头散发', '张牙舞爪'], correct: '披头散发' },
+                    { id: 'i3', question: '大螃蟹____的，好像在示威。', highlight: '____', options: ['张牙舞爪', '手疾眼快'], correct: '张牙舞爪' },
+                    { id: 'i4', question: '他们争得____。', highlight: '____', options: ['面红耳赤', '口干舌燥'], correct: '面红耳赤' },
+                    { id: 'i5', question: '大家担心得____。', highlight: '____', options: ['提心吊胆', '手忙脚乱'], correct: '提心吊胆' },
+                    { id: 'i6', question: '快迟到了，他____地穿衣服。', highlight: '____', options: ['手忙脚乱', '急急忙忙'], correct: '手忙脚乱' },
+                    { id: 'i7', question: '我____地接住了掉落的花瓶。', highlight: '____', options: ['眼疾手快', '提心吊胆'], correct: '眼疾手快' },
+                    { id: 'i8', question: '辩论赛后，我感到____。', highlight: '____', options: ['口干舌燥', '鸦雀无声'], correct: '口干舌燥' }
+                ]
+            },
+            {
+                id: 'stage7',
+                title: '第七关：古诗神殿 (7/8)',
+                description: '《所见》全诗背诵',
                 type: 'poem',
                 lines: [
                     { text: '牧童骑', blank: '黄牛', options: ['水牛', '黄牛', '黑马'] },
@@ -187,8 +195,8 @@
                 ]
             },
             {
-                id: 'stage7',
-                title: '第七关：古诗知识',
+                id: 'stage8',
+                title: '第八关：古诗知识 (8/8)',
                 description: '深入理解古诗细节',
                 type: 'choice',
                 questions: [
@@ -212,12 +220,12 @@
                 <div className="bg-white p-6 rounded-full mb-6 shadow-xl animate-bounce">
                     <Trophy size={64} className="text-yellow-500" />
                 </div>
-                <h1 className="text-4xl font-bold text-green-700 mb-4 tracking-wider">语文大冒险 (全考点版)</h1>
+                <h1 className="text-4xl font-bold text-green-700 mb-4 tracking-wider">语文大冒险 (V2.0 终极版)</h1>
                 <h2 className="text-xl text-green-600 mb-8">三年级上册 · 第一单元</h2>
                 <div className="bg-white/60 p-6 rounded-2xl mb-8 flex flex-col gap-3 text-left shadow-sm max-w-sm w-full">
-                    <p className="text-gray-600 flex items-center gap-3"><CheckCircle size={20} className="text-green-500"/> 共有 7 个关卡</p>
+                    <p className="text-gray-600 flex items-center gap-3"><CheckCircle size={20} className="text-green-500"/> 共有 8 个关卡 (已修正)</p>
                     <p className="text-gray-600 flex items-center gap-3"><BookOpen size={20} className="text-blue-500"/> 56个 核心知识点</p>
-                    <p className="text-gray-600 flex items-center gap-3"><Volume2 size={20} className="text-orange-500"/> 包含易错字、古诗、成语</p>
+                    <p className="text-gray-600 flex items-center gap-3"><Volume2 size={20} className="text-orange-500"/> 包含搭配、成语、古诗</p>
                 </div>
                 <button onClick={onStart} className="bg-green-500 hover:bg-green-600 active:scale-95 text-white text-2xl font-bold py-4 px-12 rounded-full shadow-lg transform transition flex items-center gap-3">
                     开始挑战 <ArrowRight />
@@ -230,8 +238,8 @@
             let message = ''; let IconComp = null;
             useEffect(() => { if (percentage >= 80) setTimeout(() => playSound('win'), 500); }, []);
 
-            if (percentage === 100) { message = '满分！知识点全掌握！🏆'; IconComp = <Star size={80} className="text-yellow-400 fill-current animate-spin-slow" />; }
-            else if (percentage >= 90) { message = '太厉害了！几乎全对！🌟'; IconComp = <Trophy size={80} className="text-yellow-500" />; }
+            if (percentage === 100) { message = '完美通关！太厉害了！🏆'; IconComp = <Star size={80} className="text-yellow-400 fill-current animate-spin-slow" />; }
+            else if (percentage >= 90) { message = '非常优秀！几乎全对！🌟'; IconComp = <Trophy size={80} className="text-yellow-500" />; }
             else if (percentage >= 80) { message = '很不错！基础很扎实！👍'; IconComp = <Trophy size={80} className="text-blue-500" />; }
             else { message = '继续加油，查漏补缺哦！💪'; IconComp = <BookOpen size={80} className="text-orange-500" />; }
 
