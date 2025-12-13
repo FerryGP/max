@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>三年级上册语文互动闯关平台 V10.0 (严谨教学版)</title>
+    <title>三年级上册语文互动闯关平台 V10.1 (完整修复版)</title>
     <!-- 引入 React 和 Tailwind CSS -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
@@ -92,7 +92,7 @@
             }
         };
 
-        // --- 核心数据结构：单元库 (V10.0 严谨教学版) ---
+        // --- 核心数据结构：单元库 ---
         const UNIT_DATABASE = [
             {
                 id: 'unit1', title: '第一单元', subtitle: '学校生活 · 大自然', status: 'unlocked', icon: <Feather size={32} />, color: 'from-green-400 to-emerald-600',
@@ -134,7 +134,7 @@
                         { left: '欢唱的', right: '小鸟' }, { left: '敬爱的', right: '老师' }, { left: '可爱的', right: '小学' }, { left: '古老的', right: '铜钟' },
                         { left: '粗壮的', right: '枝干' }, { left: '洁白的', right: '墙' }, { left: '簌簌地', right: '响' }, { left: '好奇地', right: '听着' }
                     ]},
-                    { id: 'stage5', title: '第五关：词语黄金搭档 (二) [新增]', type: 'match', pairs: [
+                    { id: 'stage5', title: '第五关：词语黄金搭档 (二)', type: 'match', pairs: [
                         { left: '湿润的', right: '东风' }, { left: '糊里糊涂地', right: '背' }, { left: '壮着', right: '胆子' }, { left: '高高飘扬的', right: '国旗' },
                         { left: '雷云', right: '拍大手' }, { left: '急急忙忙', right: '赶回家' }, { left: '流利地', right: '背诵' }, { left: '清楚地', right: '看到' }
                     ]},
@@ -197,7 +197,7 @@
                         { left: '湿漉漉的', right: '水泥道' }, { left: '明朗的', right: '天空' }, { left: '亮晶晶的', right: '水洼' }, { left: '金黄的', right: '叶子' },
                         { left: '彩色的', right: '地毯' }, { left: '愉快的', right: '蹦跳' }, { left: '仔细地', right: '数' }, { left: '小心的', right: '走' }
                     ]},
-                    { id: 'stage5', title: '第五关：秋天搭配色彩 (二) [新增]', type: 'match', pairs: [
+                    { id: 'stage5', title: '第五关：秋天搭配色彩 (二)', type: 'match', pairs: [
                         { left: '棕红色的', right: '小雨靴' }, { left: '平展的', right: '叶子' }, { left: '小小的', right: '蓝天' }, { left: '金色的', right: '地毯' },
                         { left: '好闻的', right: '气味' }, { left: '香甜的', right: '气味' }, { left: '五彩缤纷的', right: '颜料' }, { left: '金色的', right: '海洋' }
                     ]},
@@ -392,15 +392,70 @@
             }
         ];
 
-        // ... (Remaining components remain same)
-        // ... (MenuScreen, StartScreen, ResultScreen, ChoiceStage, MatchStage, PoemStage, App)
-
         // --- 辅助函数 ---
-        // (Include previous helper functions and components here unchanged for brevity, 
-        // ensuring the full structure is preserved when copy-pasting if needed. 
-        // The key changes are in the UNIT_DATABASE above).
+        const formatTime = (seconds) => {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${mins}分${secs.toString().padStart(2, '0')}秒`;
+        };
 
-        // ... (Component implementations)
+        // --- 子组件 ---
+
+        // 错题本界面
+        const WrongAnswersScreen = ({ wrongAnswers, onBack, onClear }) => (
+            <div className="flex flex-col h-full animate-fadeIn bg-white rounded-3xl overflow-hidden relative">
+                <div className="p-6 bg-red-50 border-b border-red-100 flex justify-between items-center">
+                    <div>
+                        <h2 className="text-2xl font-bold text-red-600 flex items-center gap-2">
+                            <BookX size={28}/> 我的错题本
+                        </h2>
+                        <p className="text-red-400 text-sm mt-1">共 {wrongAnswers.length} 道错题，加油消灭它们！</p>
+                    </div>
+                    <button onClick={onBack} className="p-2 text-gray-500 hover:bg-white rounded-full transition">
+                        <Home size={24}/>
+                    </button>
+                </div>
+
+                <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                    {wrongAnswers.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center h-64 text-gray-400">
+                            <Star size={64} className="mb-4 text-yellow-300"/>
+                            <p>太棒了！目前没有错题哦~</p>
+                        </div>
+                    ) : (
+                        wrongAnswers.map((item, idx) => (
+                            <div key={idx} className="bg-gray-50 p-4 rounded-xl border border-gray-100 shadow-sm">
+                                <div className="flex justify-between items-start mb-2">
+                                    <span className="bg-red-100 text-red-500 text-xs px-2 py-1 rounded font-bold">错题 {idx + 1}</span>
+                                    <span className="text-gray-400 text-xs">{item.unitTitle}</span>
+                                </div>
+                                <h3 className="text-lg font-bold text-gray-800 mb-3">{item.question}</h3>
+                                <div className="flex flex-col gap-1 text-sm">
+                                    <div className="flex items-center text-red-500">
+                                        <Icon path={<path d="M18 6 6 18M6 6l12 12"/>} size={16} className="mr-2"/>
+                                        你的答案：<span className="font-bold">{item.yourAnswer}</span>
+                                    </div>
+                                    <div className="flex items-center text-green-600">
+                                        <CheckCircle size={16} className="mr-2"/>
+                                        正确答案：<span className="font-bold">{item.correct}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        ))
+                    )}
+                </div>
+
+                {wrongAnswers.length > 0 && (
+                    <div className="p-4 border-t bg-gray-50 flex justify-center">
+                        <button onClick={onClear} className="flex items-center gap-2 text-red-500 hover:bg-red-100 px-6 py-3 rounded-full transition">
+                            <Trash2 size={20}/> 清空错题本
+                        </button>
+                    </div>
+                )}
+            </div>
+        );
+
+        // 1. 单元选择菜单
         const MenuScreen = ({ onSelectUnit, onOpenWrongBook, wrongCount }) => (
             <div className="flex flex-col h-full animate-fadeIn">
                 <div className="text-center mb-6">
@@ -465,60 +520,6 @@
                         {wrongCount > 0 && <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">{wrongCount}</span>}
                     </button>
                 </div>
-            </div>
-        );
-
-        // ... (Other components: StartScreen, ResultScreen, WrongAnswersScreen, ChoiceStage, MatchStage, PoemStage, App - Standard implementation)
-        const WrongAnswersScreen = ({ wrongAnswers, onBack, onClear }) => (
-            <div className="flex flex-col h-full animate-fadeIn bg-white rounded-3xl overflow-hidden relative">
-                <div className="p-6 bg-red-50 border-b border-red-100 flex justify-between items-center">
-                    <div>
-                        <h2 className="text-2xl font-bold text-red-600 flex items-center gap-2">
-                            <BookX size={28}/> 我的错题本
-                        </h2>
-                        <p className="text-red-400 text-sm mt-1">共 {wrongAnswers.length} 道错题，加油消灭它们！</p>
-                    </div>
-                    <button onClick={onBack} className="p-2 text-gray-500 hover:bg-white rounded-full transition">
-                        <Home size={24}/>
-                    </button>
-                </div>
-
-                <div className="flex-1 overflow-y-auto p-6 space-y-4">
-                    {wrongAnswers.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center h-64 text-gray-400">
-                            <Star size={64} className="mb-4 text-yellow-300"/>
-                            <p>太棒了！目前没有错题哦~</p>
-                        </div>
-                    ) : (
-                        wrongAnswers.map((item, idx) => (
-                            <div key={idx} className="bg-gray-50 p-4 rounded-xl border border-gray-100 shadow-sm">
-                                <div className="flex justify-between items-start mb-2">
-                                    <span className="bg-red-100 text-red-500 text-xs px-2 py-1 rounded font-bold">错题 {idx + 1}</span>
-                                    <span className="text-gray-400 text-xs">{item.unitTitle}</span>
-                                </div>
-                                <h3 className="text-lg font-bold text-gray-800 mb-3">{item.question}</h3>
-                                <div className="flex flex-col gap-1 text-sm">
-                                    <div className="flex items-center text-red-500">
-                                        <Icon path={<path d="M18 6 6 18M6 6l12 12"/>} size={16} className="mr-2"/>
-                                        你的答案：<span className="font-bold">{item.yourAnswer}</span>
-                                    </div>
-                                    <div className="flex items-center text-green-600">
-                                        <CheckCircle size={16} className="mr-2"/>
-                                        正确答案：<span className="font-bold">{item.correct}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        ))
-                    )}
-                </div>
-
-                {wrongAnswers.length > 0 && (
-                    <div className="p-4 border-t bg-gray-50 flex justify-center">
-                        <button onClick={onClear} className="flex items-center gap-2 text-red-500 hover:bg-red-100 px-6 py-3 rounded-full transition">
-                            <Trash2 size={20}/> 清空错题本
-                        </button>
-                    </div>
-                )}
             </div>
         );
 
@@ -796,11 +797,18 @@
 
             const handleBackToMenu = () => { setView('menu'); setActiveUnit(null); setTimerRunning(false); };
 
+            // Safety redirect
+            useEffect(() => {
+                if (view !== 'menu' && view !== 'wrongBook' && !activeUnit) {
+                    setView('menu');
+                }
+            }, [view, activeUnit]);
+
             return (
                 <div className="min-h-screen flex items-center justify-center p-4">
                     <div className="w-full max-w-4xl bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col h-[90vh] border border-gray-200 relative">
                         {/* Top Bar - only in playing mode */}
-                        {view === 'playing' && (
+                        {view === 'playing' && activeUnit && (
                             <div className={`bg-gradient-to-r ${activeUnit.color} text-white p-4 flex justify-between items-center shadow-md z-10 shrink-0`}>
                                 <div className="flex items-center gap-3">
                                     <div className="bg-white/20 p-2 rounded-lg">{activeUnit.stages[currentStageIdx].type === 'poem' ? <Feather size={24} color="white"/> : (activeUnit.stages[currentStageIdx].type === 'match' ? <RefreshCcw size={24} color="white"/> : <Star size={24} color="white"/>)}</div>
@@ -816,9 +824,9 @@
                         <div className="flex-1 overflow-hidden relative bg-slate-50 p-6 flex flex-col">
                             {view === 'menu' && <MenuScreen onSelectUnit={handleSelectUnit} onOpenWrongBook={() => setView('wrongBook')} wrongCount={wrongAnswers.length} />}
                             {view === 'wrongBook' && <WrongAnswersScreen wrongAnswers={wrongAnswers} onBack={handleBackToMenu} onClear={handleClearWrong} />}
-                            {view === 'start' && <StartScreen unit={activeUnit} onStart={handleStartGame} onBack={handleBackToMenu} />}
-                            {view === 'result' && <ResultScreen score={totalScore} total={maxScore} timeSpent={elapsedTime} onRetry={handleStartGame} onHome={handleBackToMenu} />}
-                            {view === 'playing' && (
+                            {view === 'start' && activeUnit && <StartScreen unit={activeUnit} onStart={handleStartGame} onBack={handleBackToMenu} />}
+                            {view === 'result' && activeUnit && <ResultScreen score={totalScore} total={maxScore} timeSpent={elapsedTime} onRetry={handleStartGame} onHome={handleBackToMenu} />}
+                            {view === 'playing' && activeUnit && (
                                 <div className="h-full animate-fadeIn flex-1 flex flex-col">
                                     {activeUnit.stages[currentStageIdx].type === 'choice' && <ChoiceStage key={activeUnit.stages[currentStageIdx].id} data={activeUnit.stages[currentStageIdx]} onComplete={handleStageComplete} soundEnabled={soundEnabled} onWrong={handleRecordWrong} />}
                                     {activeUnit.stages[currentStageIdx].type === 'match' && <MatchStage key={activeUnit.stages[currentStageIdx].id} data={activeUnit.stages[currentStageIdx]} onComplete={handleStageComplete} soundEnabled={soundEnabled} onWrong={handleRecordWrong} />}
