@@ -98,35 +98,68 @@
             }
         };
 
+        // 智能获取最佳中文语音
+        const getChineseVoice = () => {
+            if (!window.speechSynthesis) return null;
+            const voices = window.speechSynthesis.getVoices();
+            return voices.find(v => v.name.includes("Google") && v.lang.includes("zh")) ||
+                   voices.find(v => v.name.includes("Yaoyao")) ||
+                   voices.find(v => v.lang === "zh-CN") ||
+                   voices.find(v => v.lang.includes("zh"));
+        };
+
+        const speakText = (text) => {
+            if (!window.speechSynthesis) return;
+            window.speechSynthesis.cancel();
+            
+            // 清洗：只读汉字和标点，去除括号内容 (e.g. "增添 (zēng)" -> "增添")
+            const cleanText = text.replace(/\([^\)]*\)/g, ''); 
+            
+            const voice = getChineseVoice();
+
+            const u1 = new SpeechSynthesisUtterance(cleanText);
+            u1.lang = 'zh-CN';
+            u1.rate = 0.9; // 略慢一点更清晰
+            if (voice) u1.voice = voice;
+            
+            const u2 = new SpeechSynthesisUtterance(cleanText);
+            u2.lang = 'zh-CN';
+            u2.rate = 0.9;
+            if (voice) u2.voice = voice;
+            
+            window.speechSynthesis.speak(u1);
+            window.speechSynthesis.speak(u2);
+        };
+
         // ==========================================
-        // 3. 核心数据 (UNIT_DATABASE)
+        // 3. 核心数据 (UNIT_DATABASE) - 全量数据
         // ==========================================
         const UNIT_DATABASE = [
             {
                 id: 'special_nasal', title: '专项：前后鼻音特训', subtitle: '攻克全书 an/ang, en/eng, in/ing 难点', status: 'unlocked', icon: <Target size={32} />, color: 'from-yellow-400 to-orange-500',
                 stages: [
                     { id: 's_nasal_1', title: '第一关：en/eng 大辨析', type: 'choice', questions: [
-                        { id: 'sp1', question: '增添 (zēng)', highlight: '增', options: ['zēng', 'zēn'], correct: 'zēng', read: '增添。这个数字增加了。' },
-                        { id: 'sp2', question: '支撑 (chēng)', highlight: '撑', options: ['chēng', 'chēn'], correct: 'chēng', read: '支撑。他撑起了一把伞。' },
-                        { id: 'sp3', question: '真诚 (chéng)', highlight: '诚', options: ['chéng', 'chén'], correct: 'chéng', read: '真诚。我们要待人真诚。' },
-                        { id: 'sp4', question: '闷热 (mēn)', highlight: '闷', options: ['mēn', 'mēng'], correct: 'mēn', read: '闷热。今天天气很闷热。' },
-                        { id: 'sp5', question: '花盆 (pén)', highlight: '盆', options: ['pén', 'péng'], correct: 'pén', read: '花盆。阳台上有一个花盆。' },
-                        { id: 'sp6', question: '成功 (chéng)', highlight: '成', options: ['chéng', 'chén'], correct: 'chéng', read: '成功。祝你考试成功。' }
+                        { id: 'sp1', question: '增添 (z___)', highlight: '增', options: ['zēng', 'zēn'], correct: 'zēng', read: '增添。这个数字增加了。' },
+                        { id: 'sp2', question: '支撑 (ch___)', highlight: '撑', options: ['chēng', 'chēn'], correct: 'chēng', read: '支撑。他撑起了一把伞。' },
+                        { id: 'sp3', question: '真诚 (ch___)', highlight: '诚', options: ['chéng', 'chén'], correct: 'chéng', read: '真诚。我们要待人真诚。' },
+                        { id: 'sp4', question: '闷热 (m___)', highlight: '闷', options: ['mēn', 'mēng'], correct: 'mēn', read: '闷热。今天天气很闷热。' },
+                        { id: 'sp5', question: '花盆 (p___)', highlight: '盆', options: ['pén', 'péng'], correct: 'pén', read: '花盆。阳台上有一个花盆。' },
+                        { id: 'sp6', question: '成功 (ch___)', highlight: '成', options: ['chéng', 'chén'], correct: 'chéng', read: '成功。祝你考试成功。' }
                     ]},
                     { id: 's_nasal_2', title: '第二关：in/ing 大辨析', type: 'choice', questions: [
-                        { id: 'sp7', question: '缤纷 (bīn)', highlight: '缤', options: ['bīn', 'bīng'], correct: 'bīn', read: '缤纷。五彩缤纷的花朵。' },
-                        { id: 'sp8', question: '频繁 (pín)', highlight: '频', options: ['pín', 'píng'], correct: 'pín', read: '频繁。他频繁地举手发言。' },
-                        { id: 'sp9', question: '海滨 (bīn)', highlight: '滨', options: ['bīn', 'bīng'], correct: 'bīn', read: '海滨。美丽的海滨城市。' },
-                        { id: 'sp10', question: '沉浸 (jìn)', highlight: '浸', options: ['jìn', 'jìng'], correct: 'jìn', read: '沉浸。他沉浸在书的海洋里。' },
-                        { id: 'sp11', question: '亮晶晶 (jīng)', highlight: '晶', options: ['jīng', 'jīn'], correct: 'jīng', read: '亮晶晶。天上的星星亮晶晶。' },
-                        { id: 'sp12', question: '今年 (jīn)', highlight: '今', options: ['jīn', 'jīng'], correct: 'jīn', read: '今年。今年是龙年。' }
+                        { id: 'sp7', question: '缤纷 (b___)', highlight: '缤', options: ['bīn', 'bīng'], correct: 'bīn', read: '缤纷。五彩缤纷的花朵。' },
+                        { id: 'sp8', question: '频繁 (p___)', highlight: '频', options: ['pín', 'píng'], correct: 'pín', read: '频繁。他频繁地举手发言。' },
+                        { id: 'sp9', question: '海滨 (b___)', highlight: '滨', options: ['bīn', 'bīng'], correct: 'bīn', read: '海滨。美丽的海滨城市。' },
+                        { id: 'sp10', question: '沉浸 (j___)', highlight: '浸', options: ['jìn', 'jìng'], correct: 'jìn', read: '沉浸。他沉浸在书的海洋里。' },
+                        { id: 'sp11', question: '亮晶晶 (j___)', highlight: '晶', options: ['jīng', 'jīn'], correct: 'jīng', read: '亮晶晶。天上的星星亮晶晶。' },
+                        { id: 'sp12', question: '今年 (j___)', highlight: '今', options: ['jīn', 'jīng'], correct: 'jīn', read: '今年。今年是龙年。' }
                     ]},
                     { id: 's_nasal_3', title: '第三关：an/ang 大辨析', type: 'choice', questions: [
-                        { id: 'sp13', question: '担心 (dān)', highlight: '担', options: ['dān', 'dāng'], correct: 'dān', read: '担心。不用担心，我会帮你。' },
-                        { id: 'sp14', question: '感动 (gǎn)', highlight: '感', options: ['gǎn', 'gǎng'], correct: 'gǎn', read: '感动。这个故事让我很感动。' },
-                        { id: 'sp15', question: '荒野 (huāng)', highlight: '荒', options: ['huāng', 'huān'], correct: 'huāng', read: '荒野。空旷的荒野。' },
-                        { id: 'sp16', question: '清凉 (liáng)', highlight: '凉', options: ['liáng', 'lián'], correct: 'liáng', read: '清凉。秋天的风很清凉。' },
-                        { id: 'sp17', question: '善良 (liáng)', highlight: '良', options: ['liáng', 'lián'], correct: 'liáng', read: '善良。她是一个善良的姑娘。' },
+                        { id: 'sp13', question: '担心 (d___)', highlight: '担', options: ['dān', 'dāng'], correct: 'dān', read: '担心。不用担心，我会帮你。' },
+                        { id: 'sp14', question: '感动 (g___)', highlight: '感', options: ['gǎn', 'gǎng'], correct: 'gǎn', read: '感动。这个故事让我很感动。' },
+                        { id: 'sp15', question: '荒野 (hu___)', highlight: '荒', options: ['huāng', 'huān'], correct: 'huāng', read: '荒野。空旷的荒野。' },
+                        { id: 'sp16', question: '清凉 (li___)', highlight: '凉', options: ['liáng', 'lián'], correct: 'liáng', read: '清凉。秋天的风很清凉。' },
+                        { id: 'sp17', question: '善良 (li___)', highlight: '良', options: ['liáng', 'lián'], correct: 'liáng', read: '善良。她是一个善良的姑娘。' },
                         { id: 'sp18', question: '安装 (ān)', highlight: '安', options: ['ān', 'āng'], correct: 'ān', read: '安装。工人叔叔在安装空调。' }
                     ]},
                     { id: 's_nasal_4', title: '第四关：终极听音连线', type: 'match', pairs: [
@@ -437,6 +470,7 @@
 
         // --- 4. 组件定义 (按顺序) ---
 
+        // (No changes to component logic, just ensure MenuScreen is defined before App)
         const WrongAnswersScreen = ({ wrongAnswers, onBack, onClear }) => (
             <div className="flex flex-col h-full animate-fadeIn bg-white rounded-3xl overflow-hidden relative">
                 <div className="p-6 bg-red-50 border-b border-red-100 flex justify-between items-center">
