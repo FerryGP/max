@@ -1,844 +1,648 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>三年级上册语文互动闯关平台 V10.1 (完整修复版)</title>
-    <!-- 引入 React 和 Tailwind CSS -->
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>咒语魔盒 (Prompt Fill Tool) V0.9.0</title>
+<style>
+    /* --- 核心主题变量 (复刻原站配色) --- */
+    :root {
+        /* 原站标志性紫色 */
+        --primary: #6366f1; 
+        /* 选中态的淡紫色背景 */
+        --primary-light: #eef2ff; 
+        --text-main: #1f2937;
+        --text-sub: #6b7280;
+        /* 背景偏白灰 */
+        --bg-body: #f8fafc; 
+        --bg-white: #ffffff;
+        --border: #e2e8f0;
+        --radius: 12px;
+        --safe-top: env(safe-area-inset-top);
+        --safe-bottom: env(safe-area-inset-bottom);
+        
+        /* 变量分组色系 (复刻截图) */
+        --c-char-bg: #dbeafe; --c-char-text: #1d4ed8; /* 蓝 */
+        --c-act-bg: #fce7f3; --c-act-text: #be185d;  /* 粉 */
+        --c-vis-bg: #f3e8ff; --c-vis-text: #7e22ce;  /* 紫 */
+        --c-item-bg: #ffedd5; --c-item-text: #c2410c; /* 橙 */
+        --c-loc-bg: #d1fae5; --c-loc-text: #047857;  /* 绿 */
+    }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
     
-    <style>
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .animate-fadeIn { animation: fadeIn 0.5s ease-out forwards; }
-        
-        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
-        .animate-shake { animation: shake 0.3s ease-in-out; }
-        
-        @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        .animate-spin-slow { animation: spin-slow 3s linear infinite; }
-        
-        body { font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif; background-color: #f0fdf4; user-select: none; }
-        
-        /* 滚动条美化 */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-    </style>
+    body { 
+        margin: 0; 
+        font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif; 
+        background: var(--bg-body); 
+        color: var(--text-main); 
+        height: 100dvh; 
+        display: flex; 
+        flex-direction: column; 
+        overflow: hidden; 
+    }
+
+    /* --- 布局容器 --- */
+    .app-viewport { flex: 1; overflow: hidden; position: relative; width: 100%; height: 100%; }
+    
+    .tab-view { 
+        position: absolute; inset: 0; display: none; flex-direction: column; 
+        background: var(--bg-body); 
+        padding-bottom: calc(56px + var(--safe-bottom)); 
+    }
+    .tab-view.active { display: flex; animation: fadeIn 0.2s ease-out; }
+    
+    .scroll-content { 
+        flex: 1; 
+        overflow-y: auto; 
+        overflow-x: hidden; 
+        -webkit-overflow-scrolling: touch; 
+        padding: 16px; 
+    }
+
+    /* --- 顶部标题栏 --- */
+    .header-bar { 
+        padding: 12px 20px; 
+        padding-top: calc(12px + var(--safe-top));
+        background: var(--bg-body); /* 模版页背景通透 */
+        display: flex; 
+        align-items: center; 
+        justify-content: space-between; 
+        z-index: 20; 
+        min-height: calc(56px + var(--safe-top)); 
+    }
+    /* Editor 页需要白色背景 */
+    #tab-editor .header-bar, #tab-config .header-bar { background: var(--bg-white); border-bottom: 1px solid var(--border); }
+
+    .page-title { font-size: 18px; font-weight: 800; color: var(--text-main); display: flex; align-items: center; gap: 6px; }
+    .version-tag { font-size: 10px; color: #9ca3af; font-weight: 400; border: 1px solid #e5e7eb; padding: 1px 4px; border-radius: 4px; }
+    
+    .btn-icon { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 8px; color: var(--text-sub); transition: 0.1s; background: transparent; border: none; }
+    .btn-icon:active { background: #f3f4f6; color: var(--text-main); }
+    .btn-icon.primary { background: #eef2ff; color: var(--primary); }
+
+    /* --- Editor 交互式预览 --- */
+    .editor-card { background: var(--bg-white); border-radius: var(--radius); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); overflow: hidden; display: flex; flex-direction: column; min-height: 200px; border: 1px solid var(--border); }
+    
+    /* 图片占位区 (复刻) */
+    .card-visual { height: 180px; background: linear-gradient(180deg, #eef2ff 0%, #ffffff 100%); display: flex; align-items: center; justify-content: center; position: relative; border-bottom: 1px solid #f1f5f9; }
+    .card-visual svg { opacity: 0.5; color: var(--primary); }
+    
+    .card-content { padding: 24px 20px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 15px; line-height: 1.8; color: #374151; white-space: pre-wrap; flex: 1; }
+    
+    /* 交互式胶囊 (Chips) */
+    .interactive-chip { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 6px; font-size: 13px; font-weight: 600; margin: 0 2px; cursor: pointer; transition: all 0.1s; border: 1px solid transparent; white-space: nowrap; user-select: none; vertical-align: middle; }
+    .interactive-chip:active { transform: scale(0.96); opacity: 0.9; }
+    .interactive-chip.empty { border-style: dashed; background: #fff; color: #9ca3af; border-color: #cbd5e1; }
+
+    /* 分组颜色应用 */
+    .chip-char { background: var(--c-char-bg); color: var(--c-char-text); }
+    .chip-act { background: var(--c-act-bg); color: var(--c-act-text); }
+    .chip-vis { background: var(--c-vis-bg); color: var(--c-vis-text); }
+    .chip-item { background: var(--c-item-bg); color: var(--c-item-text); }
+    .chip-loc { background: var(--c-loc-bg); color: var(--c-loc-text); }
+    
+    /* --- 底部选词面板 (Bottom Sheet) --- */
+    .sheet-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.3); z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.2s; display: flex; flex-direction: column; justify-content: flex-end; backdrop-filter: blur(2px); }
+    .sheet-overlay.open { opacity: 1; pointer-events: auto; }
+    
+    .sheet-container { background: var(--bg-white); width: 100%; max-height: 60vh; border-radius: 20px 20px 0 0; transform: translateY(100%); transition: transform 0.25s cubic-bezier(0.32, 0.72, 0, 1); display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 -4px 20px rgba(0,0,0,0.1); }
+    .sheet-overlay.open .sheet-container { transform: translateY(0); }
+    
+    .sheet-header { padding: 16px 20px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; background: #fff; }
+    .sheet-label { font-size: 15px; font-weight: 700; color: var(--text-main); }
+    .sheet-tag { font-size: 10px; font-weight: 600; color: #fff; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; }
+    
+    .sheet-body { overflow-y: auto; padding: 0; flex: 1; background: #fff; }
+    .sheet-opt { padding: 14px 20px; font-size: 14px; color: #374151; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f8fafc; transition: 0.1s; }
+    .sheet-opt:active { background: #f1f5f9; }
+    /* 复刻截图选中态 */
+    .sheet-opt.selected { color: var(--primary); font-weight: 600; background: #f8faff; }
+    .sheet-opt-check { opacity: 0; color: var(--primary); font-weight: bold; }
+    .sheet-opt.selected .sheet-opt-check { opacity: 1; }
+    
+    .sheet-footer { padding: 12px 20px calc(12px + var(--safe-bottom)); border-top: 1px solid #f1f5f9; background: #fff; }
+    .btn-add-custom { width: 100%; padding: 12px; border: 1px dashed #cbd5e1; border-radius: 10px; color: var(--text-sub); font-size: 13px; font-weight: 500; display: flex; align-items: center; justify-content: center; gap: 6px; background: transparent; }
+
+    /* --- 模版列表 (完全复刻 IMG_2943 / IMG_2944) --- */
+    /* 移除图标，纯文字，选中左侧有竖条 */
+    .tpl-item { 
+        background: transparent; 
+        padding: 16px 12px; 
+        margin-bottom: 4px; 
+        display: flex; 
+        flex-direction: column;
+        border-radius: 8px; 
+        position: relative;
+        transition: 0.15s;
+    }
+    .tpl-item:active { background: rgba(0,0,0,0.03); }
+    
+    /* 选中态：白色卡片+阴影+左侧紫条 */
+    .tpl-item.active { 
+        background: #fff; 
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05); 
+        padding-left: 16px; /* 增加内边距给竖条 */
+    }
+    .tpl-item.active::before { 
+        content: ""; 
+        position: absolute; 
+        left: 0; 
+        top: 12px; 
+        bottom: 12px; 
+        width: 4px; 
+        background: var(--primary); 
+        border-radius: 0 4px 4px 0; 
+    }
+    
+    .tpl-row-main { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+    .tpl-name { font-size: 15px; font-weight: 500; color: var(--text-main); }
+    .tpl-actions { display: none; gap: 12px; align-items: center; }
+    
+    /* 选中时显示操作图标 */
+    .tpl-item.active .tpl-actions { display: flex; }
+    .action-icon { color: #9ca3af; padding: 4px; }
+    .action-icon:active { color: var(--primary); }
+
+    /* 底部新建按钮 (Block Button) */
+    .bottom-action-area { 
+        position: absolute; 
+        bottom: calc(56px + var(--safe-bottom)); 
+        left: 0; right: 0; 
+        padding: 16px 20px; 
+        background: linear-gradient(to top, var(--bg-body) 80%, rgba(243,244,246,0)); 
+        z-index: 10;
+    }
+    .btn-create-block { 
+        width: 100%; 
+        height: 48px; 
+        background: var(--primary); 
+        color: white; 
+        border-radius: 10px; 
+        font-weight: 600; 
+        font-size: 15px; 
+        display: flex; 
+        align-items: center; 
+        justify-content: center; 
+        gap: 6px; 
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    }
+    .btn-create-block:active { transform: scale(0.98); }
+
+    /* --- 词库配置 --- */
+    .conf-group { margin-bottom: 24px; }
+    .conf-title { padding: 0 8px 8px; font-size: 11px; font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 6px; }
+    .conf-list { background: #fff; border-radius: 12px; border: 1px solid var(--border); overflow: hidden; }
+    .conf-row { padding: 16px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
+    .conf-row:last-child { border-bottom: none; }
+    .conf-key { font-family: monospace; font-size: 11px; color: #64748b; background: #f1f5f9; padding: 2px 6px; border-radius: 4px; margin-top: 4px; display: inline-block; }
+
+    /* --- 底部导航 --- */
+    .bottom-nav { height: calc(56px + var(--safe-bottom)); background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); border-top: 1px solid #e5e7eb; position: fixed; bottom: 0; left: 0; right: 0; display: flex; justify-content: space-around; padding-bottom: var(--safe-bottom); z-index: 50; }
+    .nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; color: #9ca3af; font-size: 10px; font-weight: 500; height: 100%; transition: 0.1s; }
+    .nav-btn.active { color: var(--primary); }
+    .nav-btn svg { width: 22px; height: 22px; transition: transform 0.2s; }
+    .nav-btn.active svg { transform: translateY(-2px); }
+
+    /* 浮动复制按钮 (Editor页) */
+    .fab-copy { position: fixed; bottom: calc(70px + var(--safe-bottom)); right: 20px; width: 48px; height: 48px; border-radius: 24px; background: #1f2937; color: white; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 40; transition: 0.2s; }
+    .fab-copy:active { transform: scale(0.9); }
+
+    /* 动画 */
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+</style>
+<!-- HTML2Canvas -->
+<script src="https://cdn.staticfile.net/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
-    <div id="root"></div>
 
-    <script type="text/babel">
-        const { useState, useEffect } = React;
+<div class="app-viewport">
 
-        // --- 图标组件 ---
-        const Icon = ({ path, color = "currentColor", size = 24, className = "" }) => (
-            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>{path}</svg>
-        );
-        const Star = (props) => <Icon {...props} path={<><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" fill={props.fill || "none"}/></>} />;
-        const Trophy = (props) => <Icon {...props} path={<><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></>} />;
-        const CheckCircle = (props) => <Icon {...props} path={<><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></>} />;
-        const Clock = (props) => <Icon {...props} path={<><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></>} />;
-        const Volume2 = (props) => <Icon {...props} path={<><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></>} />;
-        const VolumeX = (props) => <Icon {...props} path={<><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></>} />;
-        const ArrowRight = (props) => <Icon {...props} path={<><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></>} />;
-        const RefreshCcw = (props) => <Icon {...props} path={<><polyline points="1 4 1 10 7 10"/><polyline points="23 20 23 14 17 14"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></>} />;
-        const Feather = (props) => <Icon {...props} path={<><path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z"/><line x1="16" y1="8" x2="2" y2="22"/><line x1="17.5" y1="15" x2="9" y2="15"/></>} />;
-        const BookOpen = (props) => <Icon {...props} path={<><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></>} />;
-        const Home = (props) => <Icon {...props} path={<><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></>} />;
-        const Lock = (props) => <Icon {...props} path={<><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></>} />;
-        const Leaf = (props) => <Icon {...props} path={<><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></>} />;
-        const Sun = (props) => <Icon {...props} path={<><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></>} />;
-        const Cloud = (props) => <Icon {...props} path={<><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></>} />;
-        const Eye = (props) => <Icon {...props} path={<><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></>} />;
-        const Mountain = (props) => <Icon {...props} path={<><path d="m8 3 4 8 5-5 5 15H2L8 3z"/></>} />;
-        const Music = (props) => <Icon {...props} path={<><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></>} />;
-        const Heart = (props) => <Icon {...props} path={<><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></>} />;
-        const BookX = (props) => <Icon {...props} path={<><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><path d="m14.5 9-5 5"/><path d="m9.5 9 5 5"/></>} />;
-        const Trash2 = (props) => <Icon {...props} path={<><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></>} />;
-
-        // --- 音效工具 ---
-        const playSound = (type) => {
-            const AudioContext = window.AudioContext || window.webkitAudioContext;
-            if (!AudioContext) return;
-            const ctx = new AudioContext();
-            const osc = ctx.createOscillator();
-            const gain = ctx.createGain();
-            osc.connect(gain);
-            gain.connect(ctx.destination);
-            const now = ctx.currentTime;
-
-            if (type === 'correct') {
-                osc.type = 'sine'; osc.frequency.setValueAtTime(500, now); osc.frequency.exponentialRampToValueAtTime(1000, now + 0.1);
-                gain.gain.setValueAtTime(0.2, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5); osc.start(now); osc.stop(now + 0.5);
-            } else if (type === 'wrong') {
-                osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, now); osc.frequency.linearRampToValueAtTime(100, now + 0.2);
-                gain.gain.setValueAtTime(0.2, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3); osc.start(now); osc.stop(now + 0.3);
-            } else if (type === 'pass') {
-                osc.type = 'triangle'; osc.frequency.setValueAtTime(440, now); osc.frequency.setValueAtTime(554, now + 0.1); osc.frequency.setValueAtTime(659, now + 0.2);
-                gain.gain.setValueAtTime(0.1, now); gain.gain.linearRampToValueAtTime(0, now + 0.4); osc.start(now); osc.stop(now + 0.4);
-            } else if (type === 'win') {
-                const notes = [523.25, 659.25, 783.99, 1046.50];
-                notes.forEach((freq, i) => {
-                    const osc2 = ctx.createOscillator(); const gain2 = ctx.createGain(); osc2.connect(gain2); gain2.connect(ctx.destination);
-                    osc2.type = 'square'; osc2.frequency.value = freq;
-                    gain2.gain.setValueAtTime(0.1, now + i * 0.1); gain2.gain.exponentialRampToValueAtTime(0.01, now + i * 0.1 + 0.4);
-                    osc2.start(now + i * 0.1); osc2.stop(now + i * 0.1 + 0.4);
-                });
-            }
-        };
-
-        // --- 核心数据结构：单元库 ---
-        const UNIT_DATABASE = [
-            {
-                id: 'unit1', title: '第一单元', subtitle: '学校生活 · 大自然', status: 'unlocked', icon: <Feather size={32} />, color: 'from-green-400 to-emerald-600',
-                stages: [
-                    { id: 'stage1', title: '第一关：拼音大闯关', type: 'choice', questions: [
-                        { id: 'p1', question: '荒野', highlight: '荒', options: ['huāng', 'hāng'], correct: 'huāng' },
-                        { id: 'p2', question: '粗壮', highlight: '粗', options: ['chū', 'cū'], correct: 'cū' },
-                        { id: 'p3', question: '摇晃', highlight: '晃', options: ['huàng', 'huǎng'], correct: 'huàng' },
-                        { id: 'p4', question: '挨打', highlight: '挨', options: ['āi', 'ái'], correct: 'ái' },
-                        { id: 'p5', question: '背诵', highlight: '背', options: ['bēi', 'bèi'], correct: 'bèi' },
-                        { id: 'p6', question: '照例', highlight: '例', options: ['lì', 'liè'], correct: 'lì' },
-                        { id: 'p7', question: '戒尺', highlight: '戒', options: ['jiè', 'jià'], correct: 'jiè' },
-                        { id: 'p8', question: '墙壁', highlight: '壁', options: ['bì', 'pì'], correct: 'bì' },
-                        { id: 'p9', question: '因为', highlight: '为', options: ['wéi', 'wèi'], correct: 'wèi' },
-                        { id: 'p10', question: '清楚', highlight: '楚', options: ['chǔ', 'chu'], correct: 'chu' },
-                        { id: 'p11', question: '凤尾竹', highlight: '凤', options: ['fèng', 'fòng'], correct: 'fèng' },
-                        { id: 'p12', question: '绒球花', highlight: '绒', options: ['róng', 'yóng'], correct: 'róng' },
-                        { id: 'm1', question: '放假', highlight: '假', options: ['jià', 'jiǎ'], correct: 'jià' },
-                        { id: 'm2', question: '挨家挨户', highlight: '挨', options: ['āi', 'ái'], correct: 'āi' },
-                        { id: 'm3', question: '羊圈', highlight: '圈', options: ['juàn', 'quān'], correct: 'juàn' },
-                        { id: 'm4', question: '糊涂', highlight: '糊', options: ['hú', 'hù'], correct: 'hú' }
-                    ]},
-                    { id: 'stage2', title: '第二关：形近字大考验', type: 'choice', questions: [
-                        { id: 'c1', question: '雨后的空气十分潮__。', highlight: '__', options: ['温', '湿'], correct: '湿' },
-                        { id: 'c2', question: '这是我的合法__利，你不能剥夺。', highlight: '__', options: ['汉', '权'], correct: '权' },
-                        { id: 'c3', question: '早读课上，大家都在朗__课文。', highlight: '__', options: ['通', '诵'], correct: '诵' },
-                        { id: 'c4', question: '春雨滋__着大地，花草喝足了水。', highlight: '__', options: ['闰', '润'], correct: '润' },
-                        { id: 'c5', question: '祖国在__唤我们去建设未来。', highlight: '__', options: ['招', '召'], correct: '召' },
-                        { id: 'c6', question: '老师举了很多__子来解释这个词。', highlight: '__', options: ['偏', '例'], correct: '例' },
-                        { id: 'c7', question: '我要去__局给远方的朋友寄信。', highlight: '__', options: ['笛', '邮'], correct: '邮' },
-                        { id: 'c8', question: '做事要冷静，千万不要__动。', highlight: '__', options: ['钟', '冲'], correct: '冲' },
-                        { id: 'c9', question: '篝火燃烧得非常__，映红了大家的脸。', highlight: '__', options: ['狂', '旺'], correct: '旺' }
-                    ]},
-                    { id: 'stage3', title: '第三关：词语大变身', type: 'match', pairs: [
-                        { left: '许多', right: '众多' }, { left: '粗壮', right: '粗大' }, { left: '飘扬', right: '飘动' }, { left: '突然', right: '忽然' },
-                        { left: '罚', right: '赏' }, { left: '古老', right: '年轻' }, { left: '认真', right: '马虎' }, { left: '安静', right: '喧闹' }
-                    ]},
-                    { id: 'stage4', title: '第四关：词语黄金搭档 (一)', type: 'match', pairs: [
-                        { left: '欢唱的', right: '小鸟' }, { left: '敬爱的', right: '老师' }, { left: '可爱的', right: '小学' }, { left: '古老的', right: '铜钟' },
-                        { left: '粗壮的', right: '枝干' }, { left: '洁白的', right: '墙' }, { left: '簌簌地', right: '响' }, { left: '好奇地', right: '听着' }
-                    ]},
-                    { id: 'stage5', title: '第五关：词语黄金搭档 (二)', type: 'match', pairs: [
-                        { left: '湿润的', right: '东风' }, { left: '糊里糊涂地', right: '背' }, { left: '壮着', right: '胆子' }, { left: '高高飘扬的', right: '国旗' },
-                        { left: '雷云', right: '拍大手' }, { left: '急急忙忙', right: '赶回家' }, { left: '流利地', right: '背诵' }, { left: '清楚地', right: '看到' }
-                    ]},
-                    { id: 'stage6', title: '第六关：成语大闯关', type: 'choice', questions: [
-                        { id: 'i1', question: '小月____地念着古诗。', highlight: '____', options: ['摇头晃脑', '披头散发'], correct: '摇头晃脑' },
-                        { id: 'i2', question: '童话里的女巫总是____。', highlight: '____', options: ['披头散发', '张牙舞爪'], correct: '披头散发' },
-                        { id: 'i3', question: '大螃蟹____的，好像在示威。', highlight: '____', options: ['张牙舞爪', '手疾眼快'], correct: '张牙舞爪' },
-                        { id: 'i4', question: '他们争得____。', highlight: '____', options: ['面红耳赤', '口干舌燥'], correct: '面红耳赤' },
-                        { id: 'i5', question: '大家担心得____。', highlight: '____', options: ['提心吊胆', '手忙脚乱'], correct: '提心吊胆' },
-                        { id: 'i6', question: '快迟到了，他____地穿衣服。', highlight: '____', options: ['手忙脚乱', '急急忙忙'], correct: '手忙脚乱' },
-                        { id: 'i7', question: '我____地接住了掉落的花瓶。', highlight: '____', options: ['眼疾手快', '提心吊胆'], correct: '眼疾手快' },
-                        { id: 'i8', question: '辩论赛后，我感到____。', highlight: '____', options: ['口干舌燥', '鸦雀无声'], correct: '口干舌燥' }
-                    ]},
-                    { id: 'stage7', title: '第七关：古诗神殿', type: 'poem', lines: [
-                        { text: '牧童', blank: '骑黄牛', options: ['骑黄牛', '骑水牛', '牵黄牛'] },
-                        { text: '歌声', blank: '振林樾', options: ['振林樾', '震林越', '振林越'] },
-                        { text: '意欲', blank: '捕鸣蝉', options: ['捕鸣蝉', '补鸣蝉', '捉鸣蝉'] },
-                        { text: '忽然', blank: '闭口立', options: ['闭口立', '避口立', '闭口坐'] }
-                    ]},
-                    { id: 'stage8', title: '第八关：古诗知识', type: 'choice', questions: [
-                        { id: 'k1', question: '《所见》的作者是清代的____。', highlight: '____', options: ['袁枚', '李白'], correct: '袁枚' },
-                        { id: 'k2', question: '“歌声振林樾”说明牧童的歌声____。', highlight: '____', options: ['非常嘹亮', '比较小声'], correct: '非常嘹亮' },
-                        { id: 'k3', question: '牧童“闭口立”的原因是？', highlight: '原因', options: ['想要捕蝉', '唱歌累了'], correct: '想要捕蝉' },
-                        { id: 'k4', question: '“林樾”指的是？', highlight: '林樾', options: ['树林阴凉处', '超越树林'], correct: '树林阴凉处' }
-                    ]}
-                ]
-            },
-            {
-                id: 'unit2', title: '第二单元', subtitle: '金秋时节 · 古诗韵味', status: 'unlocked', icon: <Leaf size={32} />, color: 'from-orange-400 to-red-500',
-                stages: [
-                    { id: 'stage1', title: '第一关：金秋拼音林', type: 'choice', questions: [
-                        { id: 'p1', question: '钥____', highlight: '____', options: ['shi', 'chí'], correct: 'shi' },
-                        { id: 'p2', question: '____添', highlight: '____', options: ['zēng', 'zēn'], correct: 'zēng' },
-                        { id: 'p3', question: '____过', highlight: '____', options: ['lüè', 'lüě'], correct: 'lüè' },
-                        { id: 'p4', question: '____乱', highlight: '____', options: ['líng', 'lín'], correct: 'líng' },
-                        { id: 'p5', question: '五彩____纷', highlight: '____', options: ['bīn', 'bīng'], correct: 'bīn' },
-                        { id: 'p6', question: '____繁', highlight: '____', options: ['pín', 'píng'], correct: 'pín' },
-                        { id: 'm1', question: '这把汤____是用来喝汤的。', highlight: '____', options: ['shi', 'chí'], correct: 'chí' },
-                        { id: 'm2', question: '他正在____选苹果。', highlight: '____', options: ['tiāo', 'tiǎo'], correct: 'tiāo' },
-                        { id: 'm3', question: '我们要勇于向困难____战。', highlight: '____', options: ['tiāo', 'tiǎo'], correct: 'tiǎo' },
-                        { id: 'm4', question: '马路两旁的人行____树很整齐。', highlight: '____', options: ['háng', 'xíng'], correct: 'xíng' },
-                        { id: 'm5', question: '铺____浪费是不好的习惯。', highlight: '____', options: ['pū', 'pù'], correct: 'pū' },
-                        { id: 'm6', question: '他把被子平____在床上。', highlight: '____', options: ['pū', 'pù'], correct: 'pū' }
-                    ]},
-                    { id: 'stage2', title: '第二关：形近字火眼金睛', type: 'choice', questions: [
-                        { id: 'c1', question: '这是一____珍贵的纪念邮票。', highlight: '____', options: ['枚', '玫'], correct: '枚' },
-                        { id: 'c2', question: '花园里的____瑰花开了。', highlight: '____', options: ['枚', '玫'], correct: '玫' },
-                        { id: 'c3', question: '这件事情非常重____。', highlight: '____', options: ['要', '票'], correct: '要' },
-                        { id: 'c4', question: '请给我一张车____。', highlight: '____', options: ['要', '票'], correct: '票' },
-                        { id: 'c5', question: '这篇作文里有很多优美的____子。', highlight: '____', options: ['句', '勾'], correct: '句' },
-                        { id: 'c6', question: '坏人互相____结做坏事。', highlight: '____', options: ['句', '勾'], correct: '勾' },
-                        { id: 'c7', question: '请你告____我真相。', highlight: '____', options: ['诉', '拆'], correct: '诉' },
-                        { id: 'c8', question: '我不小心把玩具____坏了。', highlight: '____', options: ['诉', '拆'], correct: '拆' }
-                    ]},
-                    { id: 'stage3', title: '第三关：词语对对碰', type: 'match', pairs: [
-                        { left: '明朗', right: '阴暗' }, { left: '凌乱', right: '整齐' }, { left: '留意', right: '留神' }, { left: '叮咛', right: '嘱咐' },
-                        { left: '增添', right: '增加' }, { left: '辽阔', right: '狭小' }, { left: '清凉', right: '燥热' }, { left: '丰收', right: '歉收' }
-                    ]},
-                    { id: 'stage4', title: '第四关：秋天搭配色彩 (一)', type: 'match', pairs: [
-                        { left: '湿漉漉的', right: '水泥道' }, { left: '明朗的', right: '天空' }, { left: '亮晶晶的', right: '水洼' }, { left: '金黄的', right: '叶子' },
-                        { left: '彩色的', right: '地毯' }, { left: '愉快的', right: '蹦跳' }, { left: '仔细地', right: '数' }, { left: '小心的', right: '走' }
-                    ]},
-                    { id: 'stage5', title: '第五关：秋天搭配色彩 (二)', type: 'match', pairs: [
-                        { left: '棕红色的', right: '小雨靴' }, { left: '平展的', right: '叶子' }, { left: '小小的', right: '蓝天' }, { left: '金色的', right: '地毯' },
-                        { left: '好闻的', right: '气味' }, { left: '香甜的', right: '气味' }, { left: '五彩缤纷的', right: '颜料' }, { left: '金色的', right: '海洋' }
-                    ]},
-                    { id: 'stage6', title: '第六关：成语积累库', type: 'choice', questions: [
-                        { id: 'i1', question: '形容秋天天空高远，气候凉爽的成语是____。', highlight: '____', options: ['秋高气爽', '春暖花开'], correct: '秋高气爽' },
-                        { id: 'i2', question: '形容颜色非常好看，色彩繁多的成语是____。', highlight: '____', options: ['五彩缤纷', '一本正经'], correct: '五彩缤纷' },
-                        { id: 'i3', question: '形容果实结得很多，挂满枝头的成语是____。', highlight: '____', options: ['果实累累', '层林尽染'], correct: '果实累累' },
-                        { id: 'i4', question: '形容秋风轻轻吹过的样子。', highlight: '____', options: ['秋风习习', '寒风刺骨'], correct: '秋风习习' },
-                        { id: 'i5', question: '“亮晶晶”是ABB式词语，下列也是的是____。', highlight: '____', options: ['湿漉漉', '很多多'], correct: '湿漉漉' }
-                    ]},
-                    { id: 'stage7', title: '第七关：古诗《山行》', type: 'poem', lines: [
-                        { text: '远上寒山', blank: '石径斜', options: ['石径斜', '石径窄', '石径长'] },
-                        { text: '白云', blank: '生处', options: ['生处', '深处', '高处'] },
-                        { text: '停车', blank: '坐爱', options: ['坐爱', '做爱', '最爱'] },
-                        { text: '霜叶红于', blank: '二月花', options: ['二月花', '三月花', '十月花'] },
-                    ]},
-                    { id: 'stage8', title: '第八关：古诗大串烧', type: 'choice', questions: [
-                        { id: 'p1', question: '“白银盘里一青螺”中的“白银盘”指的是？', highlight: '白银盘', options: ['洞庭湖', '盘子'], correct: '洞庭湖' },
-                        { id: 'p2', question: '《望洞庭》的作者是唐代的____。', highlight: '____', options: ['刘禹锡', '李白'], correct: '刘禹锡' },
-                        { id: 'p3', question: '“知有儿童挑促织”中的“促织”是指？', highlight: '促织', options: ['蟋蟀', '织布机'], correct: '蟋蟀' },
-                        { id: 'p4', question: '《夜书所见》描写的是哪个季节？', highlight: '季节', options: ['秋天', '夏天'], correct: '秋天' },
-                        { id: 'p5', question: '“微微风簇浪，散作满河星”描写的是？', highlight: '描写', options: ['渔灯倒影', '天上的星星'], correct: '渔灯倒影' }
-                    ]},
-                    { id: 'stage9', title: '第九关：字义深度理解', type: 'choice', questions: [
-                        { id: 'k1', question: '“白云生处有人家”的“生”意思是？', highlight: '生', options: ['产生/生出', '生活'], correct: '产生/生出' },
-                        { id: 'k2', question: '“停车坐爱枫林晚”的“坐”意思是？', highlight: '坐', options: ['因为', '坐下'], correct: '因为' },
-                        { id: 'k3', question: '“荷尽已无擎雨盖”的“擎”意思是？', highlight: '擎', options: ['举，向上托', '拿着'], correct: '举，向上托' },
-                        { id: 'k4', question: '“潭面无风镜未磨”的“未”意思是？', highlight: '未', options: ['没有', '未来'], correct: '没有' }
-                    ]},
-                    { id: 'stage10', title: '第十关：课文《秋天的雨》', type: 'match', pairs: [
-                        { left: '黄色', right: '银杏树' }, { left: '红色', right: '枫树' }, { left: '金黄色', right: '田野' },
-                        { left: '橙红色', right: '果树' }, { left: '多彩的', right: '菊花' }, { left: '银杏叶像', right: '小扇子' }, { left: '枫叶像', right: '邮票' }
-                    ]},
-                    { id: 'stage11', title: '第十一关：四季词语大分类', type: 'choice', questions: [
-                        { id: 's1', question: '“草长莺飞”描写的是哪个季节？', highlight: '季节', options: ['春天', '夏天'], correct: '春天' },
-                        { id: 's2', question: '“烈日炎炎”描写的是哪个季节？', highlight: '季节', options: ['夏天', '秋天'], correct: '夏天' },
-                        { id: 's3', question: '“层林尽染”描写的是哪个季节？', highlight: '季节', options: ['秋天', '冬天'], correct: '秋天' },
-                        { id: 's4', question: '“银装素裹”描写的是哪个季节？', highlight: '季节', options: ['冬天', '春天'], correct: '冬天' },
-                        { id: 's5', question: '“五谷丰登”描写的是哪个季节？', highlight: '季节', options: ['秋天', '夏天'], correct: '秋天' }
-                    ]}
-                ]
-            },
-            { id: 'unit3', title: '第三单元', subtitle: '童话世界 · 想象', status: 'unlocked', icon: <Sun size={32} />, color: 'from-blue-400 to-indigo-600', stages: [{id:'stage1', title:'第一关：童话拼音堡', type:'choice', questions:[{id:'p1', question:'门____', highlight:'____', options:['fèng','féng'], correct:'fèng'},{id:'p2', question:'茶____', highlight:'____', options:['jī','jǐ'], correct:'jī'},{id:'p3', question:'____哩', highlight:'____', options:['gū','gu'], correct:'gū'},{id:'p4', question:'____礼', highlight:'____', options:['hūn','hùn'], correct:'hūn'},{id:'p5', question:'____厌', highlight:'____', options:['tǎo','táo'], correct:'tǎo'},{id:'m1', question:'这个问题真____回答。', highlight:'____', options:['nán','nàn'], correct:'nán'},{id:'m2', question:'我们遇到了一场灾____。', highlight:'____', options:['nán','nàn'], correct:'nàn'},{id:'m3', question:'这根绳子打了个____。', highlight:'____', options:['jié','jiē'], correct:'jié'},{id:'m4', question:'树上____满了果子。', highlight:'____', options:['jié','jiē'], correct:'jiē'},{id:'m5', question:'这____是真的吗？', highlight:'____', options:['shì','sì'], correct:'shì'},{id:'m6', question:'他中了子____。', highlight:'____', options:['dàn','tán'], correct:'dàn'}]},{id:'stage2', title:'第二关：汉字双胞胎', type:'choice', questions:[{id:'c1', question:'我们要____备好明天的功课。', highlight:'____', options:['准','难'], correct:'准'},{id:'c2', question:'这是一家古老的____庙。', highlight:'____', options:['等','寺'], correct:'寺'},{id:'c3', question:'我们要____待客人。', highlight:'____', options:['招','待'], correct:'待'},{id:'c4', question:'吃____了才有力气干活。', highlight:'____', options:['饱','抱'], correct:'饱'},{id:'c5', question:'妈妈给了我一个拥____。', highlight:'____', options:['饱','抱'], correct:'抱'},{id:'c6', question:'这个西瓜的____子真大。', highlight:'____', options:['肚','杜'], correct:'肚'}]},{id:'stage3', title:'第三关：词语对对碰', type:'match', pairs:[{left:'准备', right:'预备'},{left:'安心', right:'放心'},{left:'飞快', right:'飞速'},{left:'讨厌', right:'厌恶'},{left:'安心', right:'担心'},{left:'容易', right:'困难'},{left:'清醒', right:'糊涂'},{left:'讨厌', right:'喜欢'}]},{id:'stage4', title:'第四关：声音模仿秀', type:'match', pairs:[{left:'牛', right:'哞哞'},{left:'公鸡', right:'喔喔'},{left:'母鸡', right:'咯咯'},{left:'小狗', right:'汪汪'},{left:'小鸭', right:'嘎嘎'},{left:'青蛙', right:'呱呱'},{left:'杜鹃', right:'咕咕'},{left:'喜鹊', right:'喳喳'}]},{id:'stage5', title:'第五关：童话搭配师', type:'match', pairs:[{left:'小小的', right:'声音'},{left:'美丽的', right:'早晨'},{left:'古老的', right:'树'},{left:'又大又漂亮的', right:'网'},{left:'飞快地', right:'爬'},{left:'偷偷', right:'地看'},{left:'瞪着', right:'双眼'},{left:'热热闹闹的', right:'婚礼'},{left:'暖洋洋的', right:'太阳'},{left:'寒冷的', right:'冬天'},{left:'呼呼的', right:'风声'},{left:'难受', right:'极了'}]},{id:'stage6', title:'第六关：国学经典', type:'choice', questions:[{id:'q1', question:'____，不贰过。（论语）', highlight:'____', options:['不迁怒','不生气'], correct:'不迁怒'},{id:'q2', question:'爱人若____。（墨子）', highlight:'____', options:['爱其身','爱自己'], correct:'爱其身'},{id:'q3', question:'仁者爱人，有礼者____。（孟子）', highlight:'____', options:['敬人','助人'], correct:'敬人'},{id:'q4', question:'与人善言，暖于____。（荀子）', highlight:'____', options:['布帛','棉被'], correct:'布帛'}]}]},
-            { id: 'unit4', title: '第四单元', subtitle: '策略 · 预测', status: 'unlocked', icon: <Cloud size={32} />, color: 'from-purple-400 to-pink-500', stages: [{id:'stage1', title:'第一关：策略拼音林', type:'choice', questions:[{id:'p1', question:'规____', highlight:'____', options:['jǔ','jù'], correct:'jǔ'},{id:'p2', question:'支____', highlight:'____', options:['chēng','chēn'], correct:'chēng'},{id:'p3', question:'____慢', highlight:'____', options:['màn','mān'], correct:'màn'},{id:'p4', question:'____人', highlight:'____', options:['yòu','xiù'], correct:'yòu'},{id:'m1', question:'他一____烟跑了。', highlight:'____', options:['liù','liū'], correct:'liù'},{id:'m2', question:'我们去____冰吧。', highlight:'____', options:['liū','liù'], correct:'liū'},{id:'m3', question:'你应该____应他。', highlight:'____', options:['dā','dá'], correct:'dā'},{id:'m4', question:'请回____我的问题。', highlight:'____', options:['dá','dā'], correct:'dá'},{id:'m5', question:'这里到____都是垃圾。', highlight:'____', options:['chù','chǔ'], correct:'chù'},{id:'m6', question:'这件事情很难____理。', highlight:'____', options:['chǔ','chù'], correct:'chǔ'}]},{id:'stage2', title:'第二关：形近字大比拼', type:'choice', questions:[{id:'c1', question:'我们要____养好习惯。', highlight:'____', options:['培','陪'], correct:'培'},{id:'c2', question:'我不小心打破了花瓶，要____偿。', highlight:'____', options:['赔','培'], correct:'赔'},{id:'c3', question:'这是一个____形。', highlight:'____', options:['矩','拒'], correct:'矩'},{id:'c4', question:'我们不能拒____别人的好意。', highlight:'____', options:['绝','矩'], correct:'绝'},{id:'c5', question:'小狗摇着____巴。', highlight:'____', options:['尾','层'], correct:'尾'},{id:'c6', question:'这栋楼有三十____高。', highlight:'____', options:['层','尾'], correct:'层'},{id:'c7', question:'我喜欢吃大____。', highlight:'____', options:['饼','拼'], correct:'饼'},{id:'c8', question:'我们一起来____图。', highlight:'____', options:['拼','饼'], correct:'拼'}]},{id:'stage3', title:'第三关：词语大挑战', type:'match', pairs:[{left:'普通', right:'特殊'},{left:'悲哀', right:'喜悦'},{left:'勇敢', right:'胆怯'},{left:'集合', right:'解散'},{left:'可怜', right:'巴巴'},{left:'怒气', right:'冲冲'},{left:'神采', right:'奕奕'},{left:'得意', right:'扬扬'},{left:'难得的', right:'机会'},{left:'讨厌的', right:'公鸡'},{left:'高兴地', right:'叫'}]},{id:'stage4', title:'第四关：数字成语王', type:'choice', questions:[{id:'n1', question:'形容射箭或枪法非常准。', highlight:'成语', options:['百发百中','百战百胜'], correct:'百发百中'},{id:'n2', question:'形容交通非常便利。', highlight:'成语', options:['四通八达','四面八方'], correct:'四通八达'},{id:'n3', question:'形容做事非常稳当。', highlight:'成语', options:['四平八稳','七上八下'], correct:'四平八稳'},{id:'n4', question:'形容心里慌乱不安。', highlight:'成语', options:['七上八下','七嘴八舌'], correct:'七上八下'},{id:'n5', question:'形容人多嘴杂，说个不停。', highlight:'成语', options:['七嘴八舌','百依百顺'], correct:'七嘴八舌'}]},{id:'stage5', title:'第五关：团结大智慧', type:'match', pairs:[{left:'人心齐', right:'泰山移'},{left:'二人同心', right:'其利断金'},{left:'三个臭皮匠', right:'顶个诸葛亮'},{left:'一个篱笆三个桩', right:'一个好汉三个帮'}]}]},
-            { id: 'unit5', title: '第五单元', subtitle: '观察 · 发现', status: 'unlocked', icon: <Eye size={32} />, color: 'from-teal-400 to-green-600', stages: [{id:'stage1', title:'第一关：观察小达人', type:'choice', questions:[{id:'p1', question:'玩____', highlight:'____', options:['shuǎ','yào'], correct:'shuǎ'},{id:'p2', question:'合____', highlight:'____', options:['lǒng','lóng'], correct:'lǒng'},{id:'p3', question:'____公英', highlight:'____', options:['pú','pǔ'], correct:'pú'},{id:'p4', question:'____鸟', highlight:'____', options:['cuì','cuī'], correct:'cuì'},{id:'p5', question:'____鱼', highlight:'____', options:['bǔ','pǔ'], correct:'bǔ'},{id:'p6', question:'____接', highlight:'____', options:['xián','jiē'], correct:'xián'},{id:'m1', question:'好____！', highlight:'____', options:['la','lā'], correct:'la'},{id:'m2', question:'呼____', highlight:'____', options:['lā','la'], correct:'lā'},{id:'m3', question:'静____', highlight:'____', options:['qiāo','qiǎo'], correct:'qiāo'},{id:'m4', question:'____然无声', highlight:'____', options:['qiǎo','qiāo'], correct:'qiǎo'},{id:'m5', question:'昌____', highlight:'____', options:['shèng','chéng'], correct:'shèng'},{id:'m6', question:'____饭', highlight:'____', options:['chéng','shèng'], correct:'chéng'}]},{id:'stage2', title:'第二关：字形辨辨辨', type:'choice', questions:[{id:'c1', question:'山____上开满了野花。', highlight:'____', options:['坡','披'], correct:'坡'},{id:'c2', question:'爷爷____着一件蓑衣。', highlight:'____', options:['披','坡'], correct:'披'},{id:'c3', question:'柳树的树____发芽了。', highlight:'____', options:['梢','悄'], correct:'梢'},{id:'c4', question:'他静____地走了。', highlight:'____', options:['悄','梢'], correct:'悄'},{id:'c5', question:'这首____谣真好听。', highlight:'____', options:['歌','哥'], correct:'歌'},{id:'c6', question:'不要在马路上玩____。', highlight:'____', options:['耍','要'], correct:'耍'},{id:'c7', question:'这件事情很重____。', highlight:'____', options:['要','耍'], correct:'要'},{id:'c8', question:'妈妈在____脸。', highlight:'____', options:['洗','拣'], correct:'洗'},{id:'c9', question:'我在地上____起一支笔。', highlight:'____', options:['捡','脸'], correct:'捡'}]},{id:'stage3', title:'第三关：词语万花筒', type:'match', pairs:[{left:'用力', right:'使劲'},{left:'美丽', right:'漂亮'},{left:'快乐', right:'愉快'},{left:'观察', right:'察看'},{left:'美丽', right:'丑陋'},{left:'盛开', right:'凋谢'},{left:'仔细', right:'粗心'},{left:'静悄悄', right:'闹哄哄'}]},{id:'stage4', title:'第四关：色彩与搭配', type:'match', pairs:[{left:'翠绿的', right:'羽毛'},{left:'红色的', right:'长嘴'},{left:'金色的', right:'草地'},{left:'可爱的', right:'草地'},{left:'有趣的', right:'蒲公英'},{left:'用力', right:'地摇'},{left:'仔细', right:'观察'},{left:'一本', right:'正经'},{left:'长长的', right:'嘴'},{left:'彩色', right:'的羽毛'},{left:'静悄悄', right:'的草地'},{left:'盛开', right:'的花朵'}]},{id:'stage5', title:'第五关：阅读理解《金色的草地》', type:'choice', questions:[{id:'r1', question:'草地早晨是什么颜色的？', highlight:'早晨', options:['绿色','金色'], correct:'绿色'},{id:'r2', question:'草地中午是什么颜色的？', highlight:'中午', options:['金色','绿色'], correct:'金色'},{id:'r3', question:'草地晚上是什么颜色的？', highlight:'晚上', options:['绿色','红色'], correct:'绿色'},{id:'r4', question:'草地变色的原因是蒲公英的花瓣____。', highlight:'____', options:['张开和合拢','凋谢了'], correct:'张开和合拢'}]}]},
-            { id: 'unit6', title: '第六单元', subtitle: '祖国河山 · 瑰丽', status: 'unlocked', icon: <Mountain size={32} />, color: 'from-cyan-500 to-blue-700', stages: [{id:'stage1', title:'第一关：风光拼音岛', type:'choice', questions:[{id:'p1', question:'富____', highlight:'____', options:['ráo','rǎo'], correct:'ráo'},{id:'p2', question:'海____', highlight:'____', options:['shēn','cān'], correct:'shēn'},{id:'p3', question:'沉____', highlight:'____', options:['jìn','qìn'], correct:'jìn'},{id:'p4', question:'胳____', highlight:'____', options:['bei','bì'], correct:'bei'},{id:'p5', question:'理____', highlight:'____', options:['cǎi','cāi'], correct:'cǎi'},{id:'p6', question:'____化', highlight:'____', options:['róng','yóng'], correct:'róng'},{id:'p7', question:'海____', highlight:'____', options:['bīn','bīng'], correct:'bīn'},{id:'p8', question:'____色', highlight:'____', options:['jué','jiǎo'], correct:'jué'}]},{id:'stage2', title:'第二关：多音字大挑战', type:'choice', questions:[{id:'m1', question:'人____', highlight:'____', options:['shēn','cān'], correct:'shēn'},{id:'m2', question:'____加', highlight:'____', options:['cān','shēn'], correct:'cān'},{id:'m3', question:'____奋', highlight:'____', options:['xīng','xìng'], correct:'xīng'},{id:'m4', question:'____趣', highlight:'____', options:['xìng','xīng'], correct:'xìng'},{id:'m5', question:'____舍', highlight:'____', options:['shè','shě'], correct:'shè'},{id:'m6', question:'____得', highlight:'____', options:['shě','shè'], correct:'shě'},{id:'m7', question:'胳____', highlight:'____', options:['bei','bì'], correct:'bei'},{id:'m8', question:'手____', highlight:'____', options:['bì','bei'], correct:'bì'}]},{id:'stage3', title:'第三关：词语对对碰', type:'match', pairs:[{left:'瑰丽', right:'奇丽'},{left:'喧闹', right:'喧嚣'},{left:'诱人', right:'迷人'},{left:'庞大', right:'巨大'},{left:'富饶', right:'贫瘠'},{left:'整洁', right:'邋遢'},{left:'巨大', right:'微小'},{left:'成群结队', right:'形单影只'}]},{id:'stage4', title:'第四关：风景搭配师 (一)', type:'match', pairs:[{left:'各种各样的', right:'珊瑚'},{left:'绽开的', right:'花朵'},{left:'分枝的', right:'鹿角'},{left:'彩色的', right:'条纹'},{left:'茂密的', right:'树林'},{left:'浩瀚的', right:'大海'},{left:'寂寞地', right:'躺'},{left:'宝贵的', right:'肥料'}]},{id:'stage5', title:'第五关：风景搭配师 (二) [新增]', type:'match', pairs:[{left:'嫩绿的', right:'叶子'},{left:'密密层层的', right:'枝叶'},{left:'鲜嫩的', right:'蘑菇'},{left:'巨大的', right:'宝库'},{left:'雪白的', right:'浪花'},{left:'懒洋洋地', right:'蠕动'},{left:'威武的', right:'大龙虾'},{left:'成群结队', right:'的鱼'}]},{id:'stage6', title:'第六关：古诗《早发白帝城》', type:'poem', lines:[{text:'朝辞白帝', blank:'彩云间', options:['彩云间','白云间','紫云间']},{text:'千里江陵', blank:'一日还', options:['一日还','二日还','三日还']},{text:'两岸猿声', blank:'啼不住', options:['啼不住','叫不住','喊不住']},{text:'轻舟已过', blank:'万重山', options:['万重山','千重山','百重山']}]}]},
-            {
-                id: 'unit7',
-                title: '第七单元',
-                subtitle: '大自然的声音 · 探索',
-                status: 'unlocked',
-                icon: <Music size={32} />,
-                color: 'from-blue-400 to-cyan-500',
-                stages: [
-                    {
-                        id: 'stage1',
-                        title: '第一关：自然之声拼音馆',
-                        description: '易错读音辨析',
-                        type: 'choice',
-                        questions: [
-                            { id: 'p1', question: '演____', highlight: '____', options: ['zòu', 'còu'], correct: 'zòu' },
-                            { id: 'p2', question: '____喃', highlight: '____', options: ['ní', 'nī'], correct: 'ní' },
-                            { id: 'p3', question: '____满', highlight: '____', options: ['chōng', 'cōng'], correct: 'chōng' },
-                            { id: 'p4', question: '____聚', highlight: '____', options: ['huì', 'huǐ'], correct: 'huì' },
-                            { id: 'p5', question: '盘____', highlight: '____', options: ['xuán', 'xuàn'], correct: 'xuán' },
-                            { id: 'm1', question: '____黑', highlight: '____', options: ['mǒ', 'mā'], correct: 'mǒ' },
-                            { id: 'm2', question: '____布', highlight: '____', options: ['mā', 'mǒ'], correct: 'mā' },
-                            { id: 'm3', question: '____绒', highlight: '____', options: ['ní', 'ne'], correct: 'ní' },
-                            { id: 'm4', question: '你____', highlight: '____', options: ['ne', 'ní'], correct: 'ne' }
-                        ]
-                    },
-                    {
-                        id: 'stage2',
-                        title: '第二关：形近字对对碰',
-                        description: '字形辨析',
-                        type: 'choice',
-                        questions: [
-                            { id: 'c1', question: '这双____子真好看。', highlight: '____', options: ['袜', '抹'], correct: '袜' },
-                            { id: 'c2', question: '他正在____桌子。', highlight: '____', options: ['抹', '袜'], correct: '抹' },
-                            { id: 'c3', question: '这真是个____计。', highlight: '____', options: ['妙', '吵'], correct: '妙' },
-                            { id: 'c4', question: '外面太____了。', highlight: '____', options: ['吵', '妙'], correct: '吵' },
-                            { id: 'c5', question: '这个气球____满气了。', highlight: '____', options: ['充', '允'], correct: '充' },
-                            { id: 'c6', question: '妈妈____许我出去玩。', highlight: '____', options: ['允', '充'], correct: '允' }
-                        ]
-                    },
-                    {
-                        id: 'stage3',
-                        title: '第三关：大自然交响乐 (一)',
-                        description: '词语搭配与拟声词',
-                        type: 'match',
-                        pairs: [
-                            { left: '雄伟的', right: '乐曲' },
-                            { left: '热闹的', right: '音乐会' },
-                            { left: '轻快的', right: '山中小曲' },
-                            { left: '波澜壮阔的', right: '海洋大合唱' },
-                            { left: '淙淙', right: '小溪' },
-                            { left: '潺潺', right: '河流' },
-                            { left: '哗哗', right: '大海' },
-                            { left: '叽叽喳喳', right: '鸟儿' }
-                        ]
-                    },
-                    { id: 'stage4', title: '第四关：大自然交响乐 (二) [新增]', type: 'match', pairs: [
-                        { left: '充满力量', right: '的声音' }, { left: '汇聚', right: '起来' }, { left: '美妙', right: '的声音' },
-                        { left: '滴滴答答', right: '下雨' }, { left: '丁丁冬冬', right: '泉水' }, { left: '轻轻柔柔', right: '声音' }
-                    ]},
-                    {
-                        id: 'stage5',
-                        title: '第五关：古诗三首大挑战',
-                        description: '古诗背诵与理解',
-                        type: 'poem',
-                        lines: [
-                            { text: '天门中断', blank: '楚江开', options: ['楚江开', '长江开', '汉江开'] },
-                            { text: '碧水东流', blank: '至此回', options: ['至此回', '向东流', '不复回'] },
-                            { text: '水光潋滟', blank: '晴方好', options: ['晴方好', '雨亦奇', '山色空'] },
-                            { text: '山色空蒙', blank: '雨亦奇', options: ['雨亦奇', '晴方好', '西子奇'] },
-                            { text: '荷叶罗裙', blank: '一色裁', options: ['一色裁', '两色裁', '五色裁'] },
-                            { text: '芙蓉向脸', blank: '两边开', options: ['两边开', '一边开', '中间开'] }
-                        ]
-                    }
-                ]
-            },
-            {
-                id: 'unit8',
-                title: '第八单元',
-                subtitle: '美好品质 · 坚韧',
-                status: 'unlocked',
-                icon: <Heart size={32} />,
-                color: 'from-pink-500 to-rose-600',
-                stages: [
-                    {
-                        id: 'stage1',
-                        title: '第一关：品质拼音馆',
-                        description: '多音字与易错音',
-                        type: 'choice',
-                        questions: [
-                            { id: 'p1', question: '____丝', highlight: '____', options: ['xuè', 'xiě'], correct: 'xuè' },
-                            { id: 'p2', question: '____倒', highlight: '____', options: ['diē', 'tiě'], correct: 'diē' },
-                            { id: 'p4', question: '放____', highlight: '____', options: ['qì', 'qǐ'], correct: 'qì' },
-                            { id: 'm1', question: '____夫', highlight: '____', options: ['dài', 'dà'], correct: 'dài' },
-                            { id: 'm2', question: '____家', highlight: '____', options: ['dà', 'dài'], correct: 'dà' },
-                            { id: 'm3', question: '出____', highlight: '____', options: ['chāi', 'chā'], correct: 'chāi' },
-                            { id: 'm4', question: '____错', highlight: '____', options: ['chā', 'chāi'], correct: 'chā' },
-                            { id: 'm5', question: '____当', highlight: '____', options: ['dān', 'dàn'], correct: 'dān' },
-                            { id: 'm6', question: '重____', highlight: '____', options: ['dàn', 'dān'], correct: 'dàn' }
-                        ]
-                    },
-                    {
-                        id: 'stage2',
-                        title: '第二关：成语积累站',
-                        description: '成语分类与运用',
-                        type: 'match',
-                        pairs: [
-                            { left: '战争', right: '硝烟滚滚' },
-                            { left: '战争', right: '枪林弹雨' },
-                            { left: '学习', right: '废寝忘食' },
-                            { left: '学习', right: '悬梁刺股' },
-                            { left: '精神', right: '舍己为人' },
-                            { left: '态度', right: '不慌不忙' }
-                        ]
-                    },
-                    {id: 'stage3', title: '第三关：词语大特训 [新增]', type: 'match', pairs: [
-                        { left: '诚实的', right: '男孩' }, { left: '严寒的', right: '冬天' }, { left: '自言自语', right: '地说' }, { left: '欢快', right: '地唱' },
-                        { left: '镇定', right: '慌张' }, { left: '落下', right: '残疾' }
-                    ]},
-                    {
-                        id: 'stage4',
-                        title: '第四关：小古文《司马光》',
-                        description: '文言文填空与理解',
-                        type: 'choice',
-                        questions: [
-                            { id: 'w1', question: '群儿戏于____。', highlight: '____', options: ['庭', '厅'], correct: '庭' },
-                            { id: 'w2', question: '一儿登____，足跌没水中。', highlight: '____', options: ['瓮', '缸'], correct: '瓮' },
-                            { id: 'w3', question: '众皆____去。', highlight: '____', options: ['弃', '跑'], correct: '弃' },
-                            { id: 'w4', question: '光持石击瓮破之，水____，儿得活。', highlight: '____', options: ['迸', '流'], correct: '迸' },
-                            { id: 'w5', question: '“众皆弃去”的意思是？', highlight: '意思', options: ['大家都跑开了', '大家都放弃了'], correct: '大家都跑开了' }
-                        ]
-                    },
-                    {
-                        id: 'stage5',
-                        title: '第五关：名言警句墙',
-                        description: '关于坚韧与修养',
-                        type: 'match',
-                        pairs: [
-                            { left: '仁者', right: '爱人' },
-                            { left: '有礼者', right: '敬人' },
-                            { left: '爱人', right: '若爱其身' },
-                            { left: '不迁怒', right: '不贰过' },
-                            { left: '锲而不舍', right: '金石可镂' }
-                        ]
-                    }
-                ]
-            }
-        ];
-
-        // --- 辅助函数 ---
-        const formatTime = (seconds) => {
-            const mins = Math.floor(seconds / 60);
-            const secs = seconds % 60;
-            return `${mins}分${secs.toString().padStart(2, '0')}秒`;
-        };
-
-        // --- 子组件 ---
-
-        // 错题本界面
-        const WrongAnswersScreen = ({ wrongAnswers, onBack, onClear }) => (
-            <div className="flex flex-col h-full animate-fadeIn bg-white rounded-3xl overflow-hidden relative">
-                <div className="p-6 bg-red-50 border-b border-red-100 flex justify-between items-center">
-                    <div>
-                        <h2 className="text-2xl font-bold text-red-600 flex items-center gap-2">
-                            <BookX size={28}/> 我的错题本
-                        </h2>
-                        <p className="text-red-400 text-sm mt-1">共 {wrongAnswers.length} 道错题，加油消灭它们！</p>
-                    </div>
-                    <button onClick={onBack} className="p-2 text-gray-500 hover:bg-white rounded-full transition">
-                        <Home size={24}/>
-                    </button>
-                </div>
-
-                <div className="flex-1 overflow-y-auto p-6 space-y-4">
-                    {wrongAnswers.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center h-64 text-gray-400">
-                            <Star size={64} className="mb-4 text-yellow-300"/>
-                            <p>太棒了！目前没有错题哦~</p>
-                        </div>
-                    ) : (
-                        wrongAnswers.map((item, idx) => (
-                            <div key={idx} className="bg-gray-50 p-4 rounded-xl border border-gray-100 shadow-sm">
-                                <div className="flex justify-between items-start mb-2">
-                                    <span className="bg-red-100 text-red-500 text-xs px-2 py-1 rounded font-bold">错题 {idx + 1}</span>
-                                    <span className="text-gray-400 text-xs">{item.unitTitle}</span>
-                                </div>
-                                <h3 className="text-lg font-bold text-gray-800 mb-3">{item.question}</h3>
-                                <div className="flex flex-col gap-1 text-sm">
-                                    <div className="flex items-center text-red-500">
-                                        <Icon path={<path d="M18 6 6 18M6 6l12 12"/>} size={16} className="mr-2"/>
-                                        你的答案：<span className="font-bold">{item.yourAnswer}</span>
-                                    </div>
-                                    <div className="flex items-center text-green-600">
-                                        <CheckCircle size={16} className="mr-2"/>
-                                        正确答案：<span className="font-bold">{item.correct}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        ))
-                    )}
-                </div>
-
-                {wrongAnswers.length > 0 && (
-                    <div className="p-4 border-t bg-gray-50 flex justify-center">
-                        <button onClick={onClear} className="flex items-center gap-2 text-red-500 hover:bg-red-100 px-6 py-3 rounded-full transition">
-                            <Trash2 size={20}/> 清空错题本
-                        </button>
-                    </div>
-                )}
+    <!-- TAB 1: 模版管理 (完全复刻 IMG_2943) -->
+    <div id="tab-templates" class="tab-view active">
+        <div class="header-bar">
+            <div class="page-title">
+                提示词填空器 <span class="version-tag">V0.9.0</span>
             </div>
-        );
+            <div style="font-size:12px;color:#6b7280;background:#f3f4f6;padding:2px 8px;border-radius:12px;">CN</div>
+        </div>
+        
+        <div style="padding: 0 20px; margin-bottom: 10px; display:flex; align-items:center; gap:8px;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2" style="background:#eef2ff; border-radius:6px; padding:2px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            <div style="font-weight:700; font-size:15px;">模版管理</div>
+        </div>
+        <div style="padding: 0 20px; font-size:12px; color:#9ca3af; margin-bottom:10px;">切换或管理不同 Prompt</div>
 
-        // 1. 单元选择菜单
-        const MenuScreen = ({ onSelectUnit, onOpenWrongBook, wrongCount }) => (
-            <div className="flex flex-col h-full animate-fadeIn">
-                <div className="text-center mb-6">
-                    <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-2 tracking-wide pt-4">小红包语文闯关大本营</h1>
-                    <h2 className="text-lg md:text-xl text-orange-500 font-bold mb-2 tracking-wider">—— 三年级期末·基础查漏补缺满分版 ——</h2>
-                </div>
-                
-                <div className="flex-1 overflow-y-auto px-4 pb-20 space-y-4">
-                    {UNIT_DATABASE.map((unit) => (
-                        <div 
-                            key={unit.id}
-                            onClick={() => unit.status === 'unlocked' && onSelectUnit(unit)}
-                            className={`
-                                relative overflow-hidden rounded-2xl p-5 transition-all duration-300 transform
-                                ${unit.status === 'unlocked' 
-                                    ? 'bg-white shadow-md cursor-pointer hover:scale-[1.02] hover:shadow-lg border-2 border-transparent hover:border-green-300 group' 
-                                    : 'bg-gray-100 border-2 border-dashed border-gray-300 opacity-80 cursor-not-allowed'}
-                            `}
-                        >
-                            <div className={`absolute top-0 right-0 p-4 opacity-10 ${unit.status === 'unlocked' ? 'text-green-500' : 'text-gray-400'}`}>
-                                {unit.icon}
-                            </div>
-                            
-                            <div className="flex items-center gap-4">
-                                <div className={`
-                                    w-14 h-14 rounded-full flex items-center justify-center text-white shadow-md shrink-0
-                                    bg-gradient-to-br ${unit.status === 'unlocked' ? unit.color : 'from-gray-400 to-gray-500'}
-                                `}>
-                                    {unit.status === 'unlocked' ? <Star size={28} fill="white"/> : <Lock size={28} />}
-                                </div>
-                                
-                                <div>
-                                    <h3 className={`text-lg font-bold ${unit.status === 'unlocked' ? 'text-gray-800' : 'text-gray-500'}`}>
-                                        {unit.title}
-                                    </h3>
-                                    <p className="text-xs text-gray-500 mt-1">{unit.subtitle}</p>
-                                    {unit.status === 'unlocked' && (
-                                        <div className="flex items-center gap-2 mt-2 text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-md inline-block">
-                                            <CheckCircle size={12}/> {unit.stages.length} 个关卡
-                                        </div>
-                                    )}
-                                </div>
-                                
-                                {unit.status === 'unlocked' && (
-                                    <div className="ml-auto text-green-500 opacity-0 group-hover:opacity-100 transition-opacity transform translate-x-4 group-hover:translate-x-0">
-                                        <ArrowRight size={24} />
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    ))}
-                </div>
+        <div id="tpl-list" class="scroll-content" style="padding-bottom: 100px;">
+            <!-- JS 生成 -->
+        </div>
+        
+        <!-- 底部新建按钮 (复刻 IMG_2944) -->
+        <div class="bottom-action-area">
+            <button class="btn-create-block" onclick="createNewTemplate()">
+                <span>+</span> 新建模版
+            </button>
+        </div>
+    </div>
 
-                {/* 底部浮动栏：错题本入口 */}
-                <div className="absolute bottom-6 left-0 w-full px-6 flex justify-center">
-                    <button 
-                        onClick={onOpenWrongBook}
-                        className="bg-white border-2 border-red-100 text-red-500 font-bold py-3 px-8 rounded-full shadow-lg flex items-center gap-3 hover:bg-red-50 transition w-full max-w-sm justify-center"
-                    >
-                        <BookX size={24}/> 
-                        我的错题本 
-                        {wrongCount > 0 && <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">{wrongCount}</span>}
-                    </button>
-                </div>
-            </div>
-        );
-
-        const StartScreen = ({ unit, onStart, onBack }) => (
-            <div className="flex flex-col items-center justify-center h-full text-center p-8 bg-gradient-to-b from-blue-50 to-green-50 rounded-3xl animate-fadeIn relative">
-                <button onClick={onBack} className="absolute top-4 left-4 p-2 text-gray-500 hover:bg-white rounded-full transition">
-                    <Home size={24}/>
+    <!-- TAB 2: Editor (交互式填空) -->
+    <div id="tab-editor" class="tab-view">
+        <div class="header-bar">
+            <div class="page-title" id="editor-title" style="font-size:16px;max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">未选择模版</div>
+            <div style="display:flex;gap:4px;">
+                <button class="btn-icon" onclick="switchMode()" title="切换模式">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
                 </button>
-                
-                <div className="bg-white p-6 rounded-full mb-6 shadow-xl animate-bounce">
-                    <Trophy size={64} className="text-yellow-500" />
-                </div>
-                <h1 className="text-3xl font-bold text-gray-800 mb-2">{unit.title}</h1>
-                <h2 className="text-xl text-green-600 mb-8">{unit.subtitle}</h2>
-                <div className="bg-white/60 p-6 rounded-2xl mb-8 flex flex-col gap-3 text-left shadow-sm max-w-sm w-full">
-                    <p className="text-gray-600 flex items-center gap-3"><CheckCircle size={20} className="text-green-500"/> 共有 {unit.stages.length} 个关卡</p>
-                    <p className="text-gray-600 flex items-center gap-3"><BookOpen size={20} className="text-blue-500"/> 全面覆盖核心考点</p>
-                    <p className="text-gray-600 flex items-center gap-3"><Volume2 size={20} className="text-orange-500"/> 开启音效体验更佳</p>
-                </div>
-                <button onClick={onStart} className="bg-green-500 hover:bg-green-600 active:scale-95 text-white text-2xl font-bold py-4 px-12 rounded-full shadow-lg transform transition flex items-center gap-3">
-                    开始挑战 <ArrowRight />
+                <button class="btn-icon" onclick="exportImage()" title="保存图片">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                </button>
+                <button class="btn-icon primary" onclick="copyResult()" title="复制">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
                 </button>
             </div>
-        );
+        </div>
 
-        const ResultScreen = ({ score, total, timeSpent, onRetry, onHome }) => {
-            const percentage = Math.round((score / total) * 100);
-            let message = ''; let IconComp = null;
-            useEffect(() => { if (percentage >= 80) setTimeout(() => playSound('win'), 500); }, []);
-
-            if (percentage === 100) { message = '完美通关！太厉害了！🏆'; IconComp = <Star size={80} className="text-yellow-400 fill-current animate-spin-slow" />; }
-            else if (percentage >= 90) { message = '非常优秀！几乎全对！🌟'; IconComp = <Trophy size={80} className="text-yellow-500" />; }
-            else if (percentage >= 80) { message = '很不错！基础很扎实！👍'; IconComp = <Trophy size={80} className="text-blue-500" />; }
-            else { message = '继续加油，查漏补缺哦！💪'; IconComp = <BookOpen size={80} className="text-orange-500" />; }
-
-            return (
-                <div className="flex flex-col items-center justify-center h-full p-8 bg-white rounded-3xl overflow-y-auto animate-fadeIn">
-                    <div className="mb-6 transform scale-110">{IconComp}</div>
-                    <h2 className="text-3xl font-bold text-gray-800 mb-2">{message}</h2>
-                    <div className="flex gap-8 mb-8 mt-4">
-                        <div className="text-center p-4 bg-green-50 rounded-xl"><p className="text-gray-500 text-sm mb-1">得分</p><p className="text-green-600 font-bold text-4xl">{score} <span className="text-lg text-gray-400">/ {total}</span></p></div>
-                        <div className="text-center p-4 bg-blue-50 rounded-xl"><p className="text-gray-500 text-sm mb-1">用时</p><p className="text-blue-600 font-bold text-4xl">{formatTime(timeSpent)}</p></div>
-                    </div>
-                    <div className="flex flex-col w-full max-w-xs gap-3">
-                        <button onClick={onRetry} className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-full shadow-md flex items-center justify-center gap-2 transition hover:scale-105 active:scale-95">
-                            <RefreshCcw size={20} /> 再玩一次
-                        </button>
-                        <button onClick={onHome} className="bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold py-3 px-8 rounded-full shadow-sm flex items-center justify-center gap-2 transition">
-                            <Home size={20} /> 返回大厅
-                        </button>
-                    </div>
+        <div class="scroll-content" style="background: #f8fafc; padding: 16px;">
+            <!-- 填空模式 (交互式卡片) -->
+            <div id="editor-fill-mode" class="editor-card">
+                <div class="card-visual">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
                 </div>
-            );
-        };
-
-        const ChoiceStage = ({ data, onComplete, soundEnabled, onWrong }) => {
-            const [currentIdx, setCurrentIdx] = useState(0);
-            const [selected, setSelected] = useState(null);
-            const [isCorrect, setIsCorrect] = useState(null);
-            const [score, setScore] = useState(0);
-            const currentQ = data.questions[currentIdx];
-
-            const handleSelect = (option) => {
-                if (selected) return;
-                setSelected(option);
-                const correct = option === currentQ.correct;
-                setIsCorrect(correct);
-                if (soundEnabled) playSound(correct ? 'correct' : 'wrong');
-                
-                if (!correct) {
-                    onWrong({
-                        question: currentQ.question.replace(currentQ.highlight, '____'), // Save template
-                        correct: currentQ.correct,
-                        yourAnswer: option
-                    });
-                }
-
-                setTimeout(() => {
-                    const newScore = correct ? score + 1 : score;
-                    if (currentIdx < data.questions.length - 1) {
-                        setScore(newScore); setCurrentIdx(currentIdx + 1); setSelected(null); setIsCorrect(null);
-                    } else { onComplete(newScore); }
-                }, correct ? 800 : 1500);
-            };
-
-            const highlightText = (text, highlight) => {
-                const parts = text.split(highlight);
-                return <span>{parts[0]}<span className="text-red-500 font-bold text-3xl mx-1 border-b-4 border-red-200 inline-block px-1">{highlight}</span>{parts[1]}</span>;
-            };
-
-            return (
-                <div className="flex flex-col items-center justify-center h-full w-full max-w-2xl mx-auto">
-                    <div className="mb-8 text-center bg-white p-8 rounded-2xl shadow-sm border border-gray-100 w-full min-h-[160px] flex items-center justify-center">
-                        <h3 className="text-3xl text-gray-800 font-medium leading-relaxed">
-                            {currentQ.highlight ? highlightText(currentQ.question, currentQ.highlight) : currentQ.question}
-                        </h3>
-                    </div>
-                    <div className="grid grid-cols-2 gap-6 w-full px-4">
-                        {currentQ.options.map((opt, idx) => (
-                            <button key={idx} onClick={() => handleSelect(opt)} disabled={!!selected}
-                                className={`py-6 px-4 rounded-2xl text-2xl font-bold shadow-md transform transition duration-200 border-b-4 ${selected === opt ? (isCorrect ? 'bg-green-500 border-green-700 text-white scale-105' : 'bg-red-500 border-red-700 text-white scale-95') : 'bg-white border-gray-200 text-gray-700 hover:bg-blue-50 hover:scale-105 hover:border-blue-300'} ${selected && selected !== opt ? 'opacity-40' : ''}`}>
-                                {opt}
-                            </button>
-                        ))}
-                    </div>
-                    {selected && <div className={`mt-6 text-xl font-bold animate-pulse ${isCorrect ? 'text-green-600' : 'text-red-500'}`}>{isCorrect ? '🎉 答对了！' : `💡 正确答案是：${currentQ.correct}`}</div>}
-                    <div className="mt-6 text-gray-400 text-sm font-medium">进度 {currentIdx + 1} / {data.questions.length}</div>
+                <div style="padding: 16px 20px 0;">
+                    <div style="display:inline-block; font-size:10px; font-weight:700; color:var(--primary); background:#eef2ff; padding:2px 6px; border-radius:4px;">Prompt Template</div>
+                    <div style="font-size:10px; color:#9ca3af; margin-top:4px;">Made by "咒语魔盒"</div>
                 </div>
-            );
-        };
-
-        const MatchStage = ({ data, onComplete, soundEnabled, onWrong }) => {
-            const [pairs, setPairs] = useState([]);
-            const [leftItems, setLeftItems] = useState([]);
-            const [rightItems, setRightItems] = useState([]);
-            const [selectedLeft, setSelectedLeft] = useState(null);
-            const [matched, setMatched] = useState([]); 
-            const [wrongShake, setWrongShake] = useState(false);
-
-            useEffect(() => {
-                const shuffledPairs = [...data.pairs].sort(() => Math.random() - 0.5);
-                setPairs(shuffledPairs);
-                setLeftItems(shuffledPairs.map(p => p.left).sort(() => Math.random() - 0.5));
-                setRightItems(shuffledPairs.map(p => p.right).sort(() => Math.random() - 0.5));
-            }, [data]);
-
-            const handleLeftClick = (item) => { if (!matched.includes(item)) { setSelectedLeft(item); setWrongShake(false); } };
-            const handleRightClick = (item) => {
-                if (matched.includes(item) || !selectedLeft) return;
-                const correctPair = pairs.find(p => p.left === selectedLeft && p.right === item);
-                if (correctPair) {
-                    if (soundEnabled) playSound('correct');
-                    const newMatched = [...matched, selectedLeft, item];
-                    setMatched(newMatched); setSelectedLeft(null);
-                    if (newMatched.length === pairs.length * 2) setTimeout(() => onComplete(pairs.length), 1000);
-                } else {
-                    if (soundEnabled) playSound('wrong');
-                    
-                    // Find correct answer for this left item to record
-                    const correctRight = pairs.find(p => p.left === selectedLeft)?.right;
-                    onWrong({
-                        question: `连线：${selectedLeft}`,
-                        correct: correctRight,
-                        yourAnswer: item
-                    });
-
-                    setWrongShake(true); setTimeout(() => setWrongShake(false), 500); setSelectedLeft(null);
-                }
-            };
-
-            return (
-                <div className="flex flex-col items-center h-full w-full max-w-4xl mx-auto px-4">
-                    <h3 className="text-xl text-gray-600 mb-6 mt-4 font-medium bg-white px-6 py-2 rounded-full shadow-sm">请点击左边的词，再点击右边连线</h3>
-                    <div className="flex justify-between w-full gap-8 md:gap-12 flex-1 overflow-y-auto p-2">
-                        <div className="flex-1 flex flex-col gap-3 md:gap-4">
-                            {leftItems.map((item, idx) => (
-                                <button key={idx} onClick={() => handleLeftClick(item)} className={`p-3 md:p-4 rounded-xl text-lg font-bold shadow-sm border-2 transition-all duration-200 ${matched.includes(item) ? 'bg-gray-50 text-gray-300 border-gray-100 cursor-default scale-95' : 'bg-white text-blue-600 border-blue-100 hover:border-blue-400 hover:shadow-md'} ${selectedLeft === item ? 'bg-blue-50 border-blue-500 scale-105 ring-2 ring-blue-200' : ''}`}>{item}</button>
-                            ))}
-                        </div>
-                        <div className="flex-1 flex flex-col gap-3 md:gap-4">
-                            {rightItems.map((item, idx) => (
-                                <button key={idx} onClick={() => handleRightClick(item)} className={`p-3 md:p-4 rounded-xl text-lg font-bold shadow-sm border-2 transition-all duration-200 ${matched.includes(item) ? 'bg-green-50 text-green-300 border-green-100 cursor-default scale-95' : 'bg-white text-green-700 border-green-100 hover:border-green-400 hover:shadow-md'} ${wrongShake ? 'animate-shake bg-red-50 border-red-300' : ''}`}>{item}</button>
-                            ))}
-                        </div>
-                    </div>
+                <div id="editor-interactive-area" class="card-content">
+                    <!-- 动态生成 -->
                 </div>
-            );
-        };
+            </div>
 
-        const PoemStage = ({ data, onComplete, soundEnabled, onWrong }) => {
-            const [currentLineIdx, setCurrentLineIdx] = useState(0);
-            const [completedLines, setCompletedLines] = useState([]);
-            const currentLine = data.lines[currentLineIdx];
+            <!-- 源码模式 -->
+            <div id="editor-code-mode" style="display:none; height:100%; flex-direction:column; gap:12px;">
+                <input id="code-title" placeholder="模版标题" style="padding:16px;border:1px solid #e2e8f0;border-radius:12px;font-size:15px;font-weight:600;">
+                <textarea id="code-content" style="flex:1;padding:16px;border:1px solid #e2e8f0;border-radius:12px;resize:none;font-family:monospace;line-height:1.6;font-size:14px;" placeholder="输入 Prompt..."></textarea>
+            </div>
+        </div>
+        
+        <!-- 悬浮复制按钮 -->
+        <div class="fab-copy" onclick="copyResult()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        </div>
+    </div>
 
-            const handleOptionClick = (opt) => {
-                const isCorrect = opt === currentLine.blank;
-                if (isCorrect) {
-                    if (soundEnabled) playSound('correct');
-                    const newCompleted = [...completedLines, { ...currentLine, filled: opt }];
-                    setCompletedLines(newCompleted);
-                    if (currentLineIdx < data.lines.length - 1) {
-                        setTimeout(() => setCurrentLineIdx(currentLineIdx + 1), 600);
-                    } else { setTimeout(() => onComplete(data.lines.length), 1000); }
-                } else { 
-                    if (soundEnabled) playSound('wrong'); 
-                    onWrong({
-                        question: `古诗填空：${currentLine.text} ____`,
-                        correct: currentLine.blank,
-                        yourAnswer: opt
-                    });
-                }
-            };
+    <!-- TAB 3: 词库配置 -->
+    <div id="tab-config" class="tab-view">
+        <div class="header-bar">
+            <div class="page-title">词库配置</div>
+            <div style="font-size:12px;padding:4px 10px;background:#fff;border:1px solid #e5e7eb;border-radius:14px;color:#6b7280;">管理分类</div>
+        </div>
+        <div style="padding:0 20px;font-size:12px;color:#9ca3af;">所有模版共享同一套词库</div>
+        <div id="config-list" class="scroll-content">
+            <!-- JS 生成 -->
+        </div>
+    </div>
 
-            return (
-                <div className="flex flex-col items-center h-full w-full max-w-2xl mx-auto">
-                    <div className="bg-[#fff9e6] p-8 rounded-2xl shadow-md w-full mb-8 border-2 border-[#ffeeba] relative overflow-hidden" style={{minHeight: '280px'}}>
-                        <div className="absolute top-0 right-0 p-4 opacity-10"><Feather size={100} color="orange"/></div>
-                        <h3 className="text-center font-serif text-3xl text-gray-800 mb-8 font-bold border-b-2 border-orange-200 pb-2 inline-block mx-auto px-12">所 见</h3>
-                        <div className="space-y-4 text-center">
-                            {completedLines.map((line, idx) => (
-                                <div key={idx} className="text-2xl text-gray-800 font-serif animate-fadeIn">{line.text} <span className="text-green-700 font-bold border-b-2 border-green-500">{line.filled}</span></div>
-                            ))}
-                            {currentLineIdx < data.lines.length && <div className="text-2xl text-gray-400 font-serif border-b-2 border-dashed border-gray-300 inline-block pb-1">{currentLine.text} ______</div>}
-                        </div>
-                    </div>
-                    {currentLineIdx < data.lines.length && (
-                        <div className="grid grid-cols-3 gap-4 w-full">
-                            {currentLine.options.map((opt, idx) => (
-                                <button key={idx} onClick={() => handleOptionClick(opt)} className="bg-white hover:bg-orange-50 border-2 border-orange-100 text-gray-700 font-bold py-4 px-2 rounded-xl shadow-sm transition hover:-translate-y-1 hover:shadow-md text-xl">{opt}</button>
-                            ))}
-                        </div>
-                    )}
-                </div>
-            );
-        };
+</div>
 
-        const App = () => {
-            const [view, setView] = useState('menu'); // menu, start, playing, result, wrongBook
-            const [activeUnit, setActiveUnit] = useState(null);
-            const [currentStageIdx, setCurrentStageIdx] = useState(0);
-            const [totalScore, setTotalScore] = useState(0);
-            const [maxScore, setMaxScore] = useState(0);
-            const [elapsedTime, setElapsedTime] = useState(0);
-            const [timerRunning, setTimerRunning] = useState(false);
-            const [soundEnabled, setSoundEnabled] = useState(true);
-            const [wrongAnswers, setWrongAnswers] = useState([]);
+<!-- 底部选词面板 (复刻 IMG_2948) -->
+<div id="bottom-sheet" class="sheet-overlay" onclick="closeSheet(event)">
+    <div class="sheet-container" onclick="event.stopPropagation()">
+        <div class="sheet-header">
+            <div style="display:flex;align-items:center;gap:10px;">
+                <span style="font-size:13px;color:#6b7280;">选择</span>
+                <span class="sheet-label" id="sheet-label">变量名</span>
+            </div>
+            <span class="sheet-tag" id="sheet-group-tag" style="background:#999;">GROUP</span>
+        </div>
+        <div class="sheet-body" id="sheet-options">
+            <!-- 选项列表 -->
+        </div>
+        <div class="sheet-footer">
+            <button class="btn-add-custom" onclick="addCustomOption()">
+                <span style="font-size:16px;">+</span> 添加自定义选项
+            </button>
+        </div>
+    </div>
+</div>
 
-            // Load wrong answers from localStorage
-            useEffect(() => {
-                const saved = localStorage.getItem('unit_quiz_wrong_answers');
-                if (saved) {
-                    setWrongAnswers(JSON.parse(saved));
-                }
-            }, []);
+<!-- 底部导航栏 -->
+<div class="bottom-nav">
+    <div class="nav-btn active" onclick="switchTab('templates')" id="nav-templates">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        <span>模版管理</span>
+    </div>
+    <div class="nav-btn" onclick="switchTab('config')" id="nav-config">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <span>词库配置</span>
+    </div>
+    <div class="nav-btn" onclick="switchTab('editor')" id="nav-editor">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        <span>Editor</span>
+    </div>
+</div>
 
-            // Save wrong answers to localStorage
-            useEffect(() => {
-                localStorage.setItem('unit_quiz_wrong_answers', JSON.stringify(wrongAnswers));
-            }, [wrongAnswers]);
+<script>
+// --- 1. 数据配置 (全量同步) ---
+const VAR_MAP = {
+    role: "角色身份", subject: "主体对象", character_companion: "合影角色", expressions: "表情集",
+    grid_pose: "九宫格动作", action_detail: "动作细节", action_pose: "互动姿势",
+    layout_focus: "构图重心", camera_angle: "拍摄角度", connectors: "视觉引导", texture_zoom: "材质特写",
+    special_view: "特殊视角", art_style: "画风", background_style: "背景风格", lens_param: "九宫格镜头", lighting: "灯光布置",
+    underwear_style: "私密内着拆解", clothing: "人物服饰", clothing_male: "男性服饰", clothing_female: "女性服饰",
+    bag_content: "随身包袋", cosmetics: "美妆与护理", private_items: "私密生活物件", fashion_deconstruct: "穿搭解构",
+    toy_companion: "互动公仔", sticker_core: "核心贴纸", sticker_decor: "装饰元素",
+    background_scene: "背景场景"
+};
 
-            useEffect(() => {
-                let interval;
-                if (timerRunning) { interval = setInterval(() => { setElapsedTime(prev => prev + 1); }, 1000); }
-                return () => clearInterval(interval);
-            }, [timerRunning]);
+const VAR_GROUPS = {
+    character: { label: "人物 (CHARACTER)", keys: ["role", "subject", "character_companion", "expressions"], color: "#3b82f6", bg: "#dbeafe", text: "#1e40af" },
+    action: { label: "动作 (ACTION)", keys: ["grid_pose", "action_detail", "action_pose"], color: "#ec4899", bg: "#fce7f3", text: "#db2777" },
+    visuals: { label: "画面 (VISUALS)", keys: ["layout_focus", "camera_angle", "connectors", "texture_zoom", "special_view", "art_style", "background_style", "lens_param", "lighting"], color: "#8b5cf6", bg: "#f3e8ff", text: "#7e22ce" },
+    item: { label: "物品 (ITEM)", keys: ["underwear_style", "clothing", "clothing_male", "clothing_female", "bag_content", "cosmetics", "private_items", "fashion_deconstruct", "toy_companion", "sticker_core", "sticker_decor"], color: "#f59e0b", bg: "#ffedd5", text: "#c2410c" },
+    location: { label: "地点 (LOCATION)", keys: ["background_scene"], color: "#10b981", bg: "#d1fae5", text: "#047857" }
+};
 
-            // Handler to record wrong answer
-            const handleRecordWrong = (wrongData) => {
-                setWrongAnswers(prev => [
-                    ...prev, 
-                    { ...wrongData, unitTitle: activeUnit.title, timestamp: Date.now() }
-                ]);
-            };
+const DEFAULT_OPTIONS = {
+    role: ["游戏与动漫概念美术设计大师", "资深时尚摄影师", "电影分镜师", "人设画师"],
+    subject: ["女性角色", "赛博朋克黑客", "奇幻精灵游侠", "现代都市白领", "机甲驾驶员", "克苏鲁修女"],
+    character_companion: ["一只肥猫", "童年的自己", "宿敌", "全息投影AI", "死侍", "超人"],
+    expressions: ["疯狂、病娇、狂喜", "冷漠、轻蔑、无视", "羞涩、脸红、躲闪", "自信、张扬、大笑"],
+    grid_pose: ["站立、坐姿、动态跑跳", "战斗姿态展示", "日常休闲动作", "施法动作分解"],
+    action_detail: ["带着项圈的爬行", "拔剑战斗姿态", "优雅的下午茶时光", "整理领带", "擦拭眼镜"],
+    action_pose: ["背靠背战斗", "互相喂食", "摸头杀", "对峙", "勾肩搭背比V字手势", "壁咚"],
+    layout_focus: ["全身立绘", "半身像", "特写镜头", "背影", "侧颜"],
+    camera_angle: ["平视", "低角度仰视", "高角度俯视", "荷兰角倾斜", "鱼眼夸张"],
+    connectors: ["手绘箭头或引导线", "虚线连接", "光效指引", "机械臂连接", "藤蔓缠绕"],
+    texture_zoom: ["凌乱感与私处汗渍", "皮革纹理与磨损", "金属光泽与锈迹", "丝绸光泽", "皮肤毛孔"],
+    special_view: ["被踩在脚下的仰视视角", "上帝视角俯瞰", "鱼眼镜头特写", "监控摄像头视角", "第一人称视角"],
+    art_style: ["高质量的2D 插画风格", "吉卜力动画风格", "厚涂油画风格", "赛博朋克霓虹风格", "黑白漫画风格", "像素艺术"],
+    background_style: ["漫画网格笔记本", "纯色极简背景", "赛博朋克霓虹街道", "废弃工厂内部", "魔法阵"],
+    lens_param: ["85mm 人像镜头", "35mm 人文广角", "200mm 长焦压缩", "微距镜头"],
+    lighting: ["自然光", "赛博霓虹光", "伦勃朗光", "边缘光(Rim Light)", "顶光", "丁达尔效应"],
+    underwear_style: ["成套的蕾丝内衣裤", "运动内衣", "棉质简约款", "绑带风格", "比基尼"],
+    clothing: ["机能风外套", "丝绸长裙", "战斗装甲", "JK制服", "旗袍", "女仆装"],
+    clothing_male: ["西装", "卫衣", "战术背心", "古风长袍"],
+    clothing_female: ["连衣裙", "短裙", "紧身衣", "晚礼服"],
+    bag_content: ["日常通勤包或手拿包", "战术背包", "魔法药剂袋", "散落的口红与手机", "一堆零食"],
+    cosmetics: ["常用的化妆品组合", "战地急救包", "魔法符文绘制工具", "易容工具"],
+    private_items: ["震动棒与项圈", "日记本与旧照片", "护身符与水晶", "手铐与钥匙", "一封情书"],
+    fashion_deconstruct: ["面料色卡", "设计草图", "版型拆解", "配饰细节"],
+    toy_companion: ["泰迪熊", "机械狗", "巫毒娃娃", "粘土人"],
+    sticker_core: ["爱心贴纸", "创可贴", "警告标识", "条形码"],
+    sticker_decor: ["星星", "花瓣", "血迹", "音符"],
+    background_scene: ["充满生活气息的卧室", "下雨的街道", "魔法学院图书馆", "太空舱", "外太空飞船内部", "末日废墟"]
+};
 
-            const handleClearWrong = () => {
-                if(confirm('确定要清空所有错题吗？')) {
-                    setWrongAnswers([]);
-                }
-            };
+const DEFAULT_TEMPLATES = [
+    { 
+        id: 't1', title: '角色概念分解图', 
+        content: `Role (角色设定)\n你是一位顶尖的 {{role}} ，擅长制作详尽的角色设定图（Character Sheet）。你具备“像素级拆解”的能力，能够透视角色的穿着层级、捕捉微表情变化，并将与其相关的物品进行具象化还原。你特别擅长通过 {{subject}} 的私密物品、随身物件和生活细节来侧面丰满人物性格与背景故事。\n\nTask (任务目标)\n根据用户上传或描述的主体形象，生成一张“全景式角色深度概念分解图”。该图片必须包含 {{layout_focus}} ，并在其周围环绕展示该人物的服装分层、不同表情、核心道具、材质特写，以及极具生活气息的私密与随身物品展示。\n\nVisual Guidelines (视觉规范)\n1. 构图布局(Layout):\n•中心位(Center): 放置角色的 {{layout_focus}} ，作为视觉锚点。\n•环绕位(Surroundings): 在中心人物四周空白处，有序排列拆解后的元素。\n•视觉引导(Connectors): 使用 {{connectors}} ，将周边的拆解物品与中心人物的对应部位或所属区域连接起来。\n\n2. 拆解内容(Deconstruction Details):\n•服装分层(Clothing Layers): 将角色的服装拆分为单品展示，例如： {{clothing}}\n•私密内着拆解: 独立展示角色的内层衣物，重点突出设计感与材质。例如： {{underwear_style}} （展示细节与剪裁）。\n•表情集(Expression Sheet): 在角落绘制3-4 个不同的头部特写，展示不同的情绪，如： {{expressions}} 。\n•材质特写(Texture & Zoom): 选取关键部位进行放大特写。例如： {{texture_zoom}} ，增加对小物件材质的描绘。\n•动作: 绘制特殊的动作和表情，例如： {{action_detail}} ，增加动作的深度刻画。\n•特殊视角: 绘制从某种特殊场景下拍摄的特殊视角，例如： {{special_view}}\n•关联物品(Related Items):\n•随身包袋与内容物: 绘制 {{bag_content}} ，并将其“打开”，展示散落在旁的物品。\n•美妆与护理: 展示 {{cosmetics}} 。\n•私密生活物件: 具象化角色隐藏面的物品。根据角色性格可能包括： {{private_items}} ，需以一种设计图的客观视角呈现。\n\n3. 风格与注释(Style & Annotations):\n•画风: {{art_style}} ，线条干净利落。\n•背景: {{background_style}} ，营造设计手稿的氛围。\n•灯光: {{lighting}}` 
+    },
+    { 
+        id: 't2', title: '3x3 摄影网格', 
+        content: `Create a 3x3 photography grid showing different angles and details of {{subject}}.\n\nSettings:\n• Role: {{role}}\n• Lens: {{lens_param}}\n• Lighting: {{lighting}}\n• Art Style: {{art_style}}\n\nGrid Content:\n1. Top Left: Close-up of face, {{expressions}}\n2. Top Center: Full body shot, {{grid_pose}}\n3. Top Right: Detail of {{clothing}}\n4. Center Left: Side profile\n5. Center: Main action shot, {{action_pose}}\n6. Center Right: Back view\n7. Bottom Left: Accessory detail, {{bag_content}}\n8. Bottom Center: Footwear/Shoes\n9. Bottom Right: Artistic blur or {{special_view}}` 
+    },
+    { id: 't3', title: '时尚情绪板插画', content: `Create a Fashion Moodboard Illustration for {{subject}}.\n\nElements:\n• Outfit: {{clothing}}\n• Deconstruction: {{fashion_deconstruct}}\n\nStyle:\n• Art: {{art_style}}\n• Bg: {{background_style}}\n• Items: {{bag_content}}` },
+    { id: 't4', title: '人物趣味合影', content: `Character Selfie (人物趣味合影)\n\n让 {{character_companion}} 站在 {{subject}} 旁边，\n\n{{action_pose}} ，同时对着镜头露出 {{expressions}} 的表情。\n\n背景：以 {{background_scene}} 为背景。\n\n要求：保持自拍构图不变，让两个角色自然地融入画面，光影统一，互动自然。` }
+];
 
-            const handleSelectUnit = (unit) => { setActiveUnit(unit); setView('start'); };
-            const handleStartGame = () => { setView('playing'); setCurrentStageIdx(0); setTotalScore(0); setMaxScore(0); setElapsedTime(0); setTimerRunning(true); if (soundEnabled) playSound('pass'); };
+// --- 2. 状态管理 ---
+let state = {
+    templates: JSON.parse(localStorage.getItem('pf_v9_tpl')) || DEFAULT_TEMPLATES,
+    options: JSON.parse(localStorage.getItem('pf_v9_opt')) || DEFAULT_OPTIONS,
+    activeId: localStorage.getItem('pf_v9_id') || 't1',
+    values: JSON.parse(localStorage.getItem('pf_v9_val')) || {},
+    tab: 'templates',
+    mode: 'fill',
+    currentVar: null
+};
+
+// --- 3. 核心功能 ---
+function save() {
+    localStorage.setItem('pf_v9_tpl', JSON.stringify(state.templates));
+    localStorage.setItem('pf_v9_opt', JSON.stringify(state.options));
+    localStorage.setItem('pf_v9_id', state.activeId);
+    localStorage.setItem('pf_v9_val', JSON.stringify(state.values));
+    render();
+}
+
+function getActiveTpl() { return state.templates.find(t => t.id === state.activeId) || state.templates[0]; }
+
+function getVarGroup(key) {
+    for (const [k, cfg] of Object.entries(VAR_GROUPS)) {
+        if (cfg.keys.includes(key)) return { ...cfg, id: k };
+    }
+    return { label: '其他 (OTHER)', color: '#9ca3af', bg: '#f3f4f6', text: '#4b5563', id: 'other' };
+}
+
+// 核心：生成交互式HTML (Chips)
+function genInteractiveHtml() {
+    const tpl = getActiveTpl();
+    if (!tpl) return "";
+    let html = tpl.content;
+    const parts = html.split(/(\{\{[^}]+\}\})/g);
+    
+    return parts.map(part => {
+        if (part.startsWith('{{') && part.endsWith('}}')) {
+            const key = part.slice(2, -2).trim();
+            const val = state.values[key];
+            const group = getVarGroup(key);
+            const label = VAR_MAP[key] || key;
+            const cls = val ? `chip-${group.id}` : 'empty';
+            const display = val || label;
             
-            const handleStageComplete = (scoreForStage) => {
-                const stage = activeUnit.stages[currentStageIdx];
-                let stageMax = 0;
-                if (stage.type === 'choice') stageMax = stage.questions.length;
-                if (stage.type === 'match') stageMax = stage.pairs.length;
-                if (stage.type === 'poem') stageMax = stage.lines.length;
-                setTotalScore(prev => prev + scoreForStage); setMaxScore(prev => prev + stageMax);
-                if (currentStageIdx < activeUnit.stages.length - 1) {
-                    if (soundEnabled) playSound('pass'); setCurrentStageIdx(prev => prev + 1);
-                } else { setTimerRunning(false); setView('result'); }
-            };
+            return `<span class="interactive-chip ${cls}" onclick="openSheet('${key}')">${display}</span>`;
+        }
+        return `<span>${part}</span>`;
+    }).join('');
+}
 
-            const handleBackToMenu = () => { setView('menu'); setActiveUnit(null); setTimerRunning(false); };
+function genPlainText() {
+    let txt = getActiveTpl().content;
+    const regex = /\{\{([^}]+)\}\}/g;
+    let m;
+    const vars = new Set();
+    while((m = regex.exec(txt)) !== null) vars.add(m[1].trim());
+    
+    vars.forEach(v => {
+        txt = txt.split(`{{${v}}}`).join(state.values[v] || `{{${v}}`);
+    });
+    return txt;
+}
 
-            // Safety redirect
-            useEffect(() => {
-                if (view !== 'menu' && view !== 'wrongBook' && !activeUnit) {
-                    setView('menu');
-                }
-            }, [view, activeUnit]);
+// --- 4. 渲染逻辑 ---
+function render() {
+    // Tab 切换
+    document.querySelectorAll('.tab-view').forEach(el => el.classList.remove('active'));
+    document.getElementById(`tab-${state.tab}`).classList.add('active');
+    
+    document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+    document.getElementById(`nav-${state.tab}`).classList.add('active');
 
-            return (
-                <div className="min-h-screen flex items-center justify-center p-4">
-                    <div className="w-full max-w-4xl bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col h-[90vh] border border-gray-200 relative">
-                        {/* Top Bar - only in playing mode */}
-                        {view === 'playing' && activeUnit && (
-                            <div className={`bg-gradient-to-r ${activeUnit.color} text-white p-4 flex justify-between items-center shadow-md z-10 shrink-0`}>
-                                <div className="flex items-center gap-3">
-                                    <div className="bg-white/20 p-2 rounded-lg">{activeUnit.stages[currentStageIdx].type === 'poem' ? <Feather size={24} color="white"/> : (activeUnit.stages[currentStageIdx].type === 'match' ? <RefreshCcw size={24} color="white"/> : <Star size={24} color="white"/>)}</div>
-                                    <div><h2 className="font-bold text-lg">{activeUnit.stages[currentStageIdx].title}</h2><p className="text-xs text-white opacity-90 hidden sm:block">{activeUnit.stages[currentStageIdx].description}</p></div>
-                                </div>
-                                <div className="flex items-center gap-4 md:gap-6">
-                                    <div className="bg-black/20 rounded-full px-4 py-1 flex items-center gap-2 backdrop-blur-sm"><Clock size={16} className="text-yellow-300"/><span className="font-mono font-bold">{formatTime(elapsedTime)}</span></div>
-                                    <button onClick={() => setSoundEnabled(!soundEnabled)} className="hover:bg-white/20 p-2 rounded-full transition">{soundEnabled ? <Volume2 size={20} color="white"/> : <VolumeX size={20} color="white"/>}</button>
-                                </div>
-                            </div>
-                        )}
-                        
-                        <div className="flex-1 overflow-hidden relative bg-slate-50 p-6 flex flex-col">
-                            {view === 'menu' && <MenuScreen onSelectUnit={handleSelectUnit} onOpenWrongBook={() => setView('wrongBook')} wrongCount={wrongAnswers.length} />}
-                            {view === 'wrongBook' && <WrongAnswersScreen wrongAnswers={wrongAnswers} onBack={handleBackToMenu} onClear={handleClearWrong} />}
-                            {view === 'start' && activeUnit && <StartScreen unit={activeUnit} onStart={handleStartGame} onBack={handleBackToMenu} />}
-                            {view === 'result' && activeUnit && <ResultScreen score={totalScore} total={maxScore} timeSpent={elapsedTime} onRetry={handleStartGame} onHome={handleBackToMenu} />}
-                            {view === 'playing' && activeUnit && (
-                                <div className="h-full animate-fadeIn flex-1 flex flex-col">
-                                    {activeUnit.stages[currentStageIdx].type === 'choice' && <ChoiceStage key={activeUnit.stages[currentStageIdx].id} data={activeUnit.stages[currentStageIdx]} onComplete={handleStageComplete} soundEnabled={soundEnabled} onWrong={handleRecordWrong} />}
-                                    {activeUnit.stages[currentStageIdx].type === 'match' && <MatchStage key={activeUnit.stages[currentStageIdx].id} data={activeUnit.stages[currentStageIdx]} onComplete={handleStageComplete} soundEnabled={soundEnabled} onWrong={handleRecordWrong} />}
-                                    {activeUnit.stages[currentStageIdx].type === 'poem' && <PoemStage key={activeUnit.stages[currentStageIdx].id} data={activeUnit.stages[currentStageIdx]} onComplete={handleStageComplete} soundEnabled={soundEnabled} onWrong={handleRecordWrong} />}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            );
-        };
-        const root = ReactDOM.createRoot(document.getElementById('root')); root.render(<App />);
-    </script>
+    // Tab 1: 模版列表 (复刻 IMG_2944)
+    document.getElementById('tpl-list').innerHTML = state.templates.map(t => `
+        <div class="tpl-item ${t.id === state.activeId ? 'active' : ''}" onclick="selectTemplate('${t.id}')">
+            <div class="tpl-row-main">
+                <div class="tpl-name">${t.title}</div>
+            </div>
+            <div class="tpl-actions">
+                <div class="action-icon" onclick="switchMode();selectTemplate('${t.id}');event.stopPropagation()">✎</div>
+                <div class="action-icon" onclick="copyTemplate('${t.id}', event)">❏</div>
+                <div class="action-icon" style="color:#ef4444" onclick="deleteTemplate('${t.id}', event)">🗑</div>
+            </div>
+        </div>
+    `).join('');
+
+    // Tab 2: Editor
+    const tpl = getActiveTpl();
+    document.getElementById('editor-title').innerText = tpl.title;
+    
+    if (state.mode === 'fill') {
+        document.getElementById('editor-fill-mode').style.display = 'flex';
+        document.getElementById('editor-code-mode').style.display = 'none';
+        document.getElementById('editor-interactive-area').innerHTML = genInteractiveHtml();
+    } else {
+        document.getElementById('editor-fill-mode').style.display = 'none';
+        document.getElementById('editor-code-mode').style.display = 'flex';
+        document.getElementById('code-title').value = tpl.title;
+        document.getElementById('code-content').value = tpl.content;
+    }
+
+    // Tab 3: Config (复刻 IMG_2945)
+    const allVars = Object.keys(state.options);
+    const groups = { other: [] };
+    Object.keys(VAR_GROUPS).forEach(k => groups[k] = []);
+    
+    allVars.forEach(v => {
+        let matched = false;
+        for (const [k, cfg] of Object.entries(VAR_GROUPS)) { if(cfg.keys.includes(v)) { groups[k].push(v); matched=true; break; } }
+        if (!matched) groups.other.push(v);
+    });
+
+    let confHtml = '';
+    Object.entries(groups).forEach(([k, list]) => {
+        if (list.length === 0) return;
+        const cfg = VAR_GROUPS[k] || {label: '其他', color: '#999'};
+        confHtml += `<div class="conf-group"><div class="conf-title" style="color:${cfg.color}"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${cfg.color};margin-right:6px;"></span>${cfg.label}</div><div class="conf-list">`;
+        list.forEach(v => {
+            const label = VAR_MAP[v] || v;
+            const count = (state.options[v]||[]).length;
+            confHtml += `<div class="conf-row" onclick="openSheet('${v}')">
+                <div><span>${label}</span><span class="conf-key">{{${v}}}</span></div>
+                <div style="color:#9ca3af;font-size:12px;">${count} ></div>
+            </div>`;
+        });
+        confHtml += `</div></div>`;
+    });
+    document.getElementById('config-list').innerHTML = confHtml;
+}
+
+// --- 5. 交互动作 ---
+window.switchTab = (t) => { state.tab = t; save(); }
+window.selectTemplate = (id) => { 
+    state.activeId = id; 
+    state.tab = 'editor'; 
+    if(navigator.vibrate) navigator.vibrate(10);
+    save(); 
+}
+
+window.switchMode = () => { 
+    state.mode = state.mode === 'fill' ? 'code' : 'fill'; 
+    save(); 
+}
+
+// 底部弹窗逻辑 (Sheet)
+window.openSheet = (key) => {
+    state.currentVar = key;
+    const group = getVarGroup(key);
+    const label = VAR_MAP[key] || key;
+    
+    document.getElementById('sheet-label').innerText = label;
+    const tag = document.getElementById('sheet-group-tag');
+    tag.innerText = group.label.split(' ')[0]; // 只显示中文
+    tag.style.background = group.color;
+    
+    const opts = state.options[key] || [];
+    const currentVal = state.values[key];
+    
+    document.getElementById('sheet-options').innerHTML = opts.map(o => `
+        <div class="sheet-opt ${o === currentVal ? 'selected' : ''}" onclick="selectOption('${o}')">
+            <span>${o}</span>
+            <span class="sheet-opt-check">✓</span>
+        </div>
+    `).join('') || '<div style="padding:20px;text-align:center;color:#ccc;">暂无选项</div>';
+    
+    document.getElementById('bottom-sheet').classList.add('open');
+}
+
+window.closeSheet = (e) => {
+    if(e && e.target !== document.getElementById('bottom-sheet') && !e.target.closest('button')) return;
+    document.getElementById('bottom-sheet').classList.remove('open');
+}
+
+window.selectOption = (val) => {
+    state.values[state.currentVar] = val;
+    save();
+    document.getElementById('bottom-sheet').classList.remove('open');
+}
+
+window.addCustomOption = () => {
+    const val = prompt("输入新选项内容:");
+    if(val && val.trim()) {
+        const key = state.currentVar;
+        if(!state.options[key]) state.options[key] = [];
+        state.options[key].push(val.trim());
+        state.values[key] = val.trim(); // 自动选中
+        save();
+        document.getElementById('bottom-sheet').classList.remove('open');
+    }
+}
+
+// 模版新建
+window.createNewTemplate = () => {
+    const id = 't'+Date.now();
+    state.templates.push({id, title:'新模版', content:'输入内容 {{变量}}...'});
+    state.activeId = id; state.tab = 'editor'; state.mode = 'code';
+    save();
+}
+
+window.copyTemplate = (id, e) => {
+    e.stopPropagation();
+    const t = state.templates.find(x => x.id === id);
+    state.templates.push({...t, id: 't'+Date.now(), title: t.title+'(副本)'});
+    save();
+}
+
+window.deleteTemplate = (id, e) => {
+    e.stopPropagation();
+    if(state.templates.length <= 1) return alert('至少保留一个');
+    if(confirm('删除?')) {
+        state.templates = state.templates.filter(x => x.id !== id);
+        state.activeId = state.templates[0].id;
+        save();
+    }
+}
+
+// 源码编辑监听
+document.getElementById('code-title').addEventListener('input', e => {
+    getActiveTpl().title = e.target.value;
+});
+document.getElementById('code-content').addEventListener('input', e => {
+    getActiveTpl().content = e.target.value;
+});
+document.getElementById('code-content').addEventListener('blur', save);
+document.getElementById('code-title').addEventListener('blur', save);
+
+window.copyResult = () => navigator.clipboard.writeText(genPlainText()).then(()=>alert('已复制'));
+window.exportImage = () => {
+    html2canvas(document.getElementById('editor-fill-mode')).then(c => {
+        const a = document.createElement('a');
+        a.download = 'prompt.png'; a.href = c.toDataURL(); a.click();
+    });
+}
+
+// Init
+render();
+</script>
 </body>
 </html>
