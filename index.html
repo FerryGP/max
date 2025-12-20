@@ -3,22 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>三年级上册语文互动闯关平台 V14.0 (终极无忧版)</title>
+    <title>三年级上册语文互动闯关平台 V16.0 (终极无忧版)</title>
+    <!-- 引入 React 和 Tailwind CSS -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    
     <style>
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .animate-fadeIn { animation: fadeIn 0.5s ease-out forwards; }
+        
         @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
         .animate-shake { animation: shake 0.3s ease-in-out; }
+        
+        @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .animate-spin-slow { animation: spin-slow 3s linear infinite; }
+        
         @keyframes pulse-audio { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.2); opacity: 0.8; } 100% { transform: scale(1); opacity: 1; } }
         .animate-speaking { animation: pulse-audio 1s infinite; }
+
         body { font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif; background-color: #f0fdf4; user-select: none; }
+        
+        /* 滚动条美化 */
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 </head>
 <body>
@@ -28,7 +39,7 @@
         const { useState, useEffect, useRef } = React;
 
         // ==========================================
-        // 1. 图标库 (Icons) - 放在最前面，防止引用错误
+        // 1. 图标库 (Icons)
         // ==========================================
         const Icon = ({ path, color = "currentColor", size = 24, className = "" }) => (
             <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>{path}</svg>
@@ -59,7 +70,7 @@
         const Target = (props) => <Icon {...props} path={<><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></>} />;
 
         // ==========================================
-        // 2. 全局工具函数 (Helpers)
+        // 2. 工具函数
         // ==========================================
         const formatTime = (seconds) => {
             const mins = Math.floor(seconds / 60);
@@ -77,7 +88,6 @@
             gain.connect(ctx.destination);
             const now = ctx.currentTime;
             
-            // 安全增益设置，防止爆音
             if (type === 'correct') {
                 osc.type = 'sine'; osc.frequency.setValueAtTime(500, now); osc.frequency.exponentialRampToValueAtTime(1000, now + 0.1);
                 gain.gain.setValueAtTime(0.1, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5); osc.start(now); osc.stop(now + 0.5);
@@ -98,33 +108,43 @@
             }
         };
 
-        // 智能获取最佳中文语音
-        const getChineseVoice = () => {
-            if (!window.speechSynthesis) return null;
-            const voices = window.speechSynthesis.getVoices();
-            return voices.find(v => v.name.includes("Google") && v.lang.includes("zh")) ||
-                   voices.find(v => v.name.includes("Yaoyao")) ||
-                   voices.find(v => v.lang === "zh-CN") ||
-                   voices.find(v => v.lang.includes("zh"));
+        // 随机数组洗牌
+        const shuffleArray = (array) => {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        };
+
+        // 获取随机子集
+        const getRandomSubset = (array, count) => {
+            if (!array || array.length === 0) return [];
+            const shuffled = shuffleArray(array);
+            return shuffled.slice(0, Math.min(count, array.length));
         };
 
         const speakText = (text) => {
             if (!window.speechSynthesis) return;
             window.speechSynthesis.cancel();
             
-            // 清洗：只读汉字和标点，去除括号内容 (e.g. "增添 (zēng)" -> "增添")
+            // 清洗：只读汉字和标点，去除括号内容
             const cleanText = text.replace(/\([^\)]*\)/g, ''); 
             
+            // 简单获取中文语音
+            const getChineseVoice = () => {
+                const voices = window.speechSynthesis.getVoices();
+                return voices.find(v => v.lang.includes("zh"));
+            };
             const voice = getChineseVoice();
 
             const u1 = new SpeechSynthesisUtterance(cleanText);
-            u1.lang = 'zh-CN';
-            u1.rate = 0.9; // 略慢一点更清晰
+            u1.lang = 'zh-CN'; u1.rate = 0.9; 
             if (voice) u1.voice = voice;
             
             const u2 = new SpeechSynthesisUtterance(cleanText);
-            u2.lang = 'zh-CN';
-            u2.rate = 0.9;
+            u2.lang = 'zh-CN'; u2.rate = 0.9;
             if (voice) u2.voice = voice;
             
             window.speechSynthesis.speak(u1);
@@ -132,42 +152,105 @@
         };
 
         // ==========================================
-        // 3. 核心数据 (UNIT_DATABASE) - 全量数据
+        // 3. 核心数据 (UNIT_DATABASE)
         // ==========================================
         const UNIT_DATABASE = [
             {
-                id: 'special_nasal', title: '专项：前后鼻音特训', subtitle: '攻克全书 an/ang, en/eng, in/ing 难点', status: 'unlocked', icon: <Target size={32} />, color: 'from-yellow-400 to-orange-500',
+                id: 'special_nasal',
+                title: '专项：前后鼻音特训',
+                subtitle: '攻克全书 an/ang, en/eng, in/ing 难点',
+                status: 'unlocked',
+                icon: <Target size={32} />,
+                color: 'from-yellow-400 to-orange-500',
                 stages: [
-                    { id: 's_nasal_1', title: '第一关：en/eng 大辨析', type: 'choice', questions: [
-                        { id: 'sp1', question: '增添 (z___)', highlight: '增', options: ['zēng', 'zēn'], correct: 'zēng', read: '增添。这个数字增加了。' },
-                        { id: 'sp2', question: '支撑 (ch___)', highlight: '撑', options: ['chēng', 'chēn'], correct: 'chēng', read: '支撑。他撑起了一把伞。' },
-                        { id: 'sp3', question: '真诚 (ch___)', highlight: '诚', options: ['chéng', 'chén'], correct: 'chéng', read: '真诚。我们要待人真诚。' },
-                        { id: 'sp4', question: '闷热 (m___)', highlight: '闷', options: ['mēn', 'mēng'], correct: 'mēn', read: '闷热。今天天气很闷热。' },
-                        { id: 'sp5', question: '花盆 (p___)', highlight: '盆', options: ['pén', 'péng'], correct: 'pén', read: '花盆。阳台上有一个花盆。' },
-                        { id: 'sp6', question: '成功 (ch___)', highlight: '成', options: ['chéng', 'chén'], correct: 'chéng', read: '成功。祝你考试成功。' }
-                    ]},
-                    { id: 's_nasal_2', title: '第二关：in/ing 大辨析', type: 'choice', questions: [
-                        { id: 'sp7', question: '缤纷 (b___)', highlight: '缤', options: ['bīn', 'bīng'], correct: 'bīn', read: '缤纷。五彩缤纷的花朵。' },
-                        { id: 'sp8', question: '频繁 (p___)', highlight: '频', options: ['pín', 'píng'], correct: 'pín', read: '频繁。他频繁地举手发言。' },
-                        { id: 'sp9', question: '海滨 (b___)', highlight: '滨', options: ['bīn', 'bīng'], correct: 'bīn', read: '海滨。美丽的海滨城市。' },
-                        { id: 'sp10', question: '沉浸 (j___)', highlight: '浸', options: ['jìn', 'jìng'], correct: 'jìn', read: '沉浸。他沉浸在书的海洋里。' },
-                        { id: 'sp11', question: '亮晶晶 (j___)', highlight: '晶', options: ['jīng', 'jīn'], correct: 'jīng', read: '亮晶晶。天上的星星亮晶晶。' },
-                        { id: 'sp12', question: '今年 (j___)', highlight: '今', options: ['jīn', 'jīng'], correct: 'jīn', read: '今年。今年是龙年。' }
-                    ]},
-                    { id: 's_nasal_3', title: '第三关：an/ang 大辨析', type: 'choice', questions: [
-                        { id: 'sp13', question: '担心 (d___)', highlight: '担', options: ['dān', 'dāng'], correct: 'dān', read: '担心。不用担心，我会帮你。' },
-                        { id: 'sp14', question: '感动 (g___)', highlight: '感', options: ['gǎn', 'gǎng'], correct: 'gǎn', read: '感动。这个故事让我很感动。' },
-                        { id: 'sp15', question: '荒野 (hu___)', highlight: '荒', options: ['huāng', 'huān'], correct: 'huāng', read: '荒野。空旷的荒野。' },
-                        { id: 'sp16', question: '清凉 (li___)', highlight: '凉', options: ['liáng', 'lián'], correct: 'liáng', read: '清凉。秋天的风很清凉。' },
-                        { id: 'sp17', question: '善良 (li___)', highlight: '良', options: ['liáng', 'lián'], correct: 'liáng', read: '善良。她是一个善良的姑娘。' },
-                        { id: 'sp18', question: '安装 (ān)', highlight: '安', options: ['ān', 'āng'], correct: 'ān', read: '安装。工人叔叔在安装空调。' }
-                    ]},
-                    { id: 's_nasal_4', title: '第四关：终极听音连线', type: 'match', pairs: [
-                        { left: '拼命', right: 'pīn' }, { left: '草坪', right: 'píng' },
-                        { left: '真诚', right: 'zhēn' }, { left: '风筝', right: 'zhēng' },
-                        { left: '甚至', right: 'shèn' }, { left: '茂盛', right: 'shèng' },
-                        { left: '寒冷', right: 'hán' }, { left: '行船', right: 'háng' }
-                    ]}
+                    {
+                        id: 's_nasal_1',
+                        title: '第一关：en/eng 大辨析',
+                        description: '选出正确的读音 (随机10题)',
+                        type: 'choice',
+                        count: 10,
+                        questions: [
+                            { id: 'sp1', question: '增添 (z___)', highlight: '增', options: ['zēng', 'zēn'], correct: 'zēng', read: '增添。这个数字增加了。' },
+                            { id: 'sp2', question: '支撑 (ch___)', highlight: '撑', options: ['chēng', 'chēn'], correct: 'chēng', read: '支撑。他撑起了一把伞。' },
+                            { id: 'sp3', question: '真诚 (ch___)', highlight: '诚', options: ['chéng', 'chén'], correct: 'chéng', read: '真诚。我们要待人真诚。' },
+                            { id: 'sp4', question: '闷热 (m___)', highlight: '闷', options: ['mēn', 'mēng'], correct: 'mēn', read: '闷热。今天天气很闷热。' },
+                            { id: 'sp5', question: '花盆 (p___)', highlight: '盆', options: ['pén', 'péng'], correct: 'pén', read: '花盆。阳台上有一个花盆。' },
+                            { id: 'sp6', question: '成功 (ch___)', highlight: '成', options: ['chéng', 'chén'], correct: 'chéng', read: '成功。祝你考试成功。' },
+                            { id: 'sp7', question: '早晨 (ch___)', highlight: '晨', options: ['chén', 'chéng'], correct: 'chén', read: '早晨。' },
+                            { id: 'sp8', question: '深浅 (sh___)', highlight: '深', options: ['shēn', 'shēng'], correct: 'shēn', read: '深浅。' },
+                            { id: 'sp9', question: '登山 (d___)', highlight: '登', options: ['dēng', 'dēn'], correct: 'dēng', read: '登山。' },
+                            { id: 'sp10', question: '寒冷 (l___)', highlight: '冷', options: ['lěng', 'lěn'], correct: 'lěng', read: '寒冷。' },
+                            { id: 'sp_new1', question: '根本 (g___)', highlight: '根', options: ['gēn', 'gēng'], correct: 'gēn', read: '根本。' },
+                            { id: 'sp_new2', question: '更正 (g___)', highlight: '更', options: ['gēng', 'gēn'], correct: 'gēng', read: '更正。' },
+                            { id: 'sp_new3', question: '陈旧 (ch___)', highlight: '陈', options: ['chén', 'chéng'], correct: 'chén', read: '陈旧。' },
+                            { id: 'sp_new4', question: '路程 (ch___)', highlight: '程', options: ['chéng', 'chén'], correct: 'chéng', read: '路程。' },
+                            { id: 'sp_new5', question: '伸手 (sh___)', highlight: '伸', options: ['shēn', 'shēng'], correct: 'shēn', read: '伸手。' },
+                            { id: 'sp_new6', question: '花生 (sh___)', highlight: '生', options: ['shēng', 'shēn'], correct: 'shēng', read: '花生。' }
+                        ]
+                    },
+                    {
+                        id: 's_nasal_2',
+                        title: '第二关：in/ing 终极辨析',
+                        description: '选出正确的读音 (随机10题)',
+                        type: 'choice',
+                        count: 10,
+                        questions: [
+                            { id: 'sp7', question: '缤纷 (b___)', highlight: '缤', options: ['bīn', 'bīng'], correct: 'bīn', read: '缤纷。' },
+                            { id: 'sp8', question: '频繁 (p___)', highlight: '频', options: ['pín', 'píng'], correct: 'pín', read: '频繁。' },
+                            { id: 'sp9', question: '海滨 (b___)', highlight: '滨', options: ['bīn', 'bīng'], correct: 'bīn', read: '海滨。' },
+                            { id: 'sp10', question: '沉浸 (j___)', highlight: '浸', options: ['jìn', 'jìng'], correct: 'jìn', read: '沉浸。' },
+                            { id: 'sp11', question: '亮晶晶 (j___)', highlight: '晶', options: ['jīng', 'jīn'], correct: 'jīng', read: '亮晶晶。' },
+                            { id: 'sp12', question: '今年 (j___)', highlight: '今', options: ['jīn', 'jīng'], correct: 'jīn', read: '今年。' },
+                            { id: 'sp17', question: '紧张 (j___)', highlight: '紧', options: ['jǐn', 'jǐng'], correct: 'jǐn', read: '紧张。' },
+                            { id: 'sp18', question: '镜子 (j___)', highlight: '镜', options: ['jìng', 'jìn'], correct: 'jìng', read: '镜子。' },
+                            { id: 'sp19', question: '隐蔽 (y___)', highlight: '隐', options: ['yǐn', 'yǐng'], correct: 'yǐn', read: '隐蔽。' },
+                            { id: 'sp20', question: '影子 (y___)', highlight: '影', options: ['yǐng', 'yǐn'], correct: 'yǐng', read: '影子。' },
+                            { id: 'sp_new7', question: '信心 (x___)', highlight: '信', options: ['xìn', 'xìng'], correct: 'xìn', read: '信心。' },
+                            { id: 'sp_new8', question: '幸运 (x___)', highlight: '幸', options: ['xìng', 'xìn'], correct: 'xìng', read: '幸运。' },
+                            { id: 'sp_new9', question: '邻居 (l___)', highlight: '邻', options: ['lín', 'líng'], correct: 'lín', read: '邻居。' },
+                            { id: 'sp_new10', question: '机灵 (l___)', highlight: '灵', options: ['líng', 'lín'], correct: 'líng', read: '机灵。' },
+                            { id: 'sp_new11', question: '您好 (n___)', highlight: '您', options: ['nín', 'níng'], correct: 'nín', read: '您好。' },
+                            { id: 'sp_new12', question: '安宁 (n___)', highlight: '宁', options: ['níng', 'nín'], correct: 'níng', read: '安宁。' }
+                        ]
+                    },
+                    {
+                        id: 's_nasal_3',
+                        title: '第三关：an/ang 大辨析',
+                        description: '选出正确的读音 (随机10题)',
+                        type: 'choice',
+                        count: 10,
+                        questions: [
+                            { id: 'sp13', question: '担心 (d___)', highlight: '担', options: ['dān', 'dāng'], correct: 'dān', read: '担心。' },
+                            { id: 'sp14', question: '感动 (g___)', highlight: '感', options: ['gǎn', 'gǎng'], correct: 'gǎn', read: '感动。' },
+                            { id: 'sp15', question: '荒野 (hu___)', highlight: '荒', options: ['huāng', 'huān'], correct: 'huāng', read: '荒野。' },
+                            { id: 'sp16', question: '清凉 (li___)', highlight: '凉', options: ['liáng', 'lián'], correct: 'liáng', read: '清凉。' },
+                            { id: 'sp17', question: '善良 (li___)', highlight: '良', options: ['liáng', 'lián'], correct: 'liáng', read: '善良。' },
+                            { id: 'sp18', question: '安装 (___)', highlight: '安', options: ['ān', 'āng'], correct: 'ān', read: '安装。' },
+                            { id: 'sp27', question: '平淡 (d___)', highlight: '淡', options: ['dàn', 'dàng'], correct: 'dàn', read: '平淡。' },
+                            { id: 'sp28', question: '当心 (d___)', highlight: '当', options: ['dāng', 'dān'], correct: 'dāng', read: '当心。' },
+                            { id: 'sp29', question: '男子汉 (h___)', highlight: '汉', options: ['hàn', 'hàng'], correct: 'hàn', read: '男子汉。' },
+                            { id: 'sp30', question: '肮脏 (z___)', highlight: '脏', options: ['zāng', 'zān'], correct: 'zāng', read: '肮脏。' },
+                            { id: 'sp_new13', question: '三年 (s___)', highlight: '三', options: ['sān', 'shān'], correct: 'sān', read: '三年。' },
+                            { id: 'sp_new14', question: '山峰 (sh___)', highlight: '山', options: ['shān', 'sān'], correct: 'shān', read: '山峰。' },
+                            { id: 'sp_new15', question: '生产 (ch___)', highlight: '产', options: ['chǎn', 'chǎng'], correct: 'chǎn', read: '生产。' },
+                            { id: 'sp_new16', question: '工厂 (ch___)', highlight: '厂', options: ['chǎng', 'chǎn'], correct: 'chǎng', read: '工厂。' }
+                        ]
+                    },
+                    {
+                        id: 's_nasal_4',
+                        title: '第四关：终极听音连线',
+                        description: '将词语与正确的拼音连线 (随机6组)',
+                        type: 'match',
+                        count: 6,
+                        pairs: [
+                            { left: '拼命', right: 'pīn' }, { left: '草坪', right: 'píng' },
+                            { left: '真诚', right: 'zhēn' }, { left: '风筝', right: 'zhēng' },
+                            { left: '甚至', right: 'shèn' }, { left: '茂盛', right: 'shèng' },
+                            { left: '寒冷', right: 'hán' }, { left: '行船', right: 'xíng' },
+                            { left: '诊所', right: 'zhěn' }, { left: '整齐', right: 'zhěng' },
+                            { left: '分心', right: 'fēn' }, { left: '风景', right: 'fēng' }
+                        ]
+                    }
                 ]
             },
             {
@@ -249,8 +332,8 @@
                         { id: 'p5', question: '五彩____纷', highlight: '____', options: ['bīn', 'bīng'], correct: 'bīn' },
                         { id: 'p6', question: '____繁', highlight: '____', options: ['pín', 'píng'], correct: 'pín' },
                         { id: 'm1', question: '这把汤____是用来喝汤的。', highlight: '____', options: ['shi', 'chí'], correct: 'chí' },
-                        { id: 'm2', question: '他正在____选苹果。', highlight: '____', options: ['tiāo', 'tiǎo'], correct: 'tiāo' },
-                        { id: 'm3', question: '我们要勇于向困难____战。', highlight: '____', options: ['tiāo', 'tiǎo'], correct: 'tiǎo' },
+                        { id: 'm2', question: '他正在____选苹果。', highlight: '____', options:['tiāo', 'tiǎo'], correct:'tiāo' },
+                        { id: 'm3', question: '我们要勇于向困难____战。', highlight: '____', options:['tiāo', 'tiǎo'], correct:'tiǎo' },
                         { id: 'm4', question: '马路两旁的人行____树很整齐。', highlight: '____', options: ['háng', 'xíng'], correct: 'xíng' },
                         { id: 'm5', question: '铺____浪费是不好的习惯。', highlight: '____', options: ['pū', 'pù'], correct: 'pū' },
                         { id: 'm6', question: '他把被子平____在床上。', highlight: '____', options: ['pū', 'pù'], correct: 'pū' }
@@ -469,8 +552,6 @@
         ];
 
         // --- 4. 组件定义 (按顺序) ---
-
-        // (No changes to component logic, just ensure MenuScreen is defined before App)
         const WrongAnswersScreen = ({ wrongAnswers, onBack, onClear }) => (
             <div className="flex flex-col h-full animate-fadeIn bg-white rounded-3xl overflow-hidden relative">
                 <div className="p-6 bg-red-50 border-b border-red-100 flex justify-between items-center">
@@ -526,7 +607,7 @@
             <div className="flex flex-col h-full animate-fadeIn">
                 <div className="text-center mb-6">
                     <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-2 tracking-wide pt-4">语文闯关大本营</h1>
-                    <h2 className="text-lg md:text-xl text-orange-500 font-bold mb-2 tracking-wider">—— 三年期末·严谨教学版 ——</h2>
+                    <h2 className="text-lg md:text-xl text-orange-500 font-bold mb-2 tracking-wider">—— 三年期末·智能随机版 ——</h2>
                 </div>
                 
                 <div className="flex-1 overflow-y-auto px-4 pb-20 space-y-4">
@@ -600,7 +681,7 @@
                 <h2 className="text-xl text-green-600 mb-8">{unit.subtitle}</h2>
                 <div className="bg-white/60 p-6 rounded-2xl mb-8 flex flex-col gap-3 text-left shadow-sm max-w-sm w-full">
                     <p className="text-gray-600 flex items-center gap-3"><CheckCircle size={20} className="text-green-500"/> 共有 {unit.stages.length} 个关卡</p>
-                    <p className="text-gray-600 flex items-center gap-3"><BookOpen size={20} className="text-blue-500"/> 全面覆盖核心考点</p>
+                    <p className="text-gray-600 flex items-center gap-3"><BookOpen size={20} className="text-blue-500"/> 智能随机出题</p>
                     <p className="text-gray-600 flex items-center gap-3"><Volume2 size={20} className="text-orange-500"/> 开启音效体验更佳</p>
                 </div>
                 <button onClick={onStart} className="bg-green-500 hover:bg-green-600 active:scale-95 text-white text-2xl font-bold py-4 px-12 rounded-full shadow-lg transform transition flex items-center gap-3">
@@ -640,11 +721,25 @@
         };
 
         const ChoiceStage = ({ data, onComplete, soundEnabled, onWrong }) => {
+            const [questions, setQuestions] = useState([]);
             const [currentIdx, setCurrentIdx] = useState(0);
             const [selected, setSelected] = useState(null);
             const [isCorrect, setIsCorrect] = useState(null);
             const [score, setScore] = useState(0);
-            const currentQ = data.questions[currentIdx];
+            const [isSpeaking, setIsSpeaking] = useState(false);
+
+            useEffect(() => {
+                const count = data.count || 999; 
+                setQuestions(getRandomSubset(data.questions, count));
+                setCurrentIdx(0);
+                setScore(0);
+                setSelected(null);
+                setIsCorrect(null);
+            }, [data]);
+
+            if (questions.length === 0) return null;
+
+            const currentQ = questions[currentIdx];
 
             const handleSelect = (option) => {
                 if (selected) return;
@@ -653,17 +748,10 @@
                 setIsCorrect(correct);
                 if (soundEnabled) playSound(correct ? 'correct' : 'wrong');
                 
-                // --- 朗读逻辑 ---
                 if (correct && currentQ.read) {
-                    if ('speechSynthesis' in window) {
-                        window.speechSynthesis.cancel();
-                        const u = new SpeechSynthesisUtterance(currentQ.read);
-                        u.lang = 'zh-CN'; u.rate = 0.85;
-                        window.speechSynthesis.speak(u);
-                        const u2 = new SpeechSynthesisUtterance(currentQ.read);
-                        u2.lang = 'zh-CN'; u2.rate = 0.85;
-                        window.speechSynthesis.speak(u2);
-                    }
+                    setIsSpeaking(true);
+                    speakText(currentQ.read);
+                    setTimeout(() => setIsSpeaking(false), 2500);
                 }
 
                 if (!correct) {
@@ -676,9 +764,9 @@
 
                 setTimeout(() => {
                     const newScore = correct ? score + 1 : score;
-                    if (currentIdx < data.questions.length - 1) {
+                    if (currentIdx < questions.length - 1) {
                         setScore(newScore); setCurrentIdx(currentIdx + 1); setSelected(null); setIsCorrect(null);
-                    } else { onComplete(newScore); }
+                    } else { onComplete(newScore, questions.length); } 
                 }, correct ? 2500 : 1500); 
             };
 
@@ -693,9 +781,9 @@
                         <h3 className="text-3xl text-gray-800 font-medium leading-relaxed">
                             {currentQ.highlight ? highlightText(currentQ.question, currentQ.highlight) : currentQ.question}
                         </h3>
-                        {currentQ.read && !selected && (
-                             <div className="absolute top-2 right-2 text-gray-300">
-                                <Icon path={<path d="M11 5L6 9H2v6h4l5 4V5zM15.54 8.46a5 5 0 0 1 0 7.07"/>} size={20} />
+                         {isSpeaking && (
+                             <div className="absolute top-2 right-2 text-green-500 animate-speaking">
+                                <Volume1 size={24} />
                              </div>
                         )}
                     </div>
@@ -708,7 +796,7 @@
                         ))}
                     </div>
                     {selected && <div className={`mt-6 text-xl font-bold animate-pulse ${isCorrect ? 'text-green-600' : 'text-red-500'}`}>{isCorrect ? '🎉 答对了！' : `💡 正确答案是：${currentQ.correct}`}</div>}
-                    <div className="mt-6 text-gray-400 text-sm font-medium">进度 {currentIdx + 1} / {data.questions.length}</div>
+                    <div className="mt-6 text-gray-400 text-sm font-medium">进度 {currentIdx + 1} / {questions.length}</div>
                 </div>
             );
         };
@@ -722,46 +810,54 @@
             const [wrongShake, setWrongShake] = useState(false);
 
             useEffect(() => {
-                const shuffledPairs = [...data.pairs].sort(() => Math.random() - 0.5);
-                setPairs(shuffledPairs);
-                setLeftItems(shuffledPairs.map(p => p.left).sort(() => Math.random() - 0.5));
-                setRightItems(shuffledPairs.map(p => p.right).sort(() => Math.random() - 0.5));
+                const count = data.count || 6; 
+                const selectedPairs = getRandomSubset(data.pairs, count);
+                setPairs(selectedPairs);
+                setLeftItems([...selectedPairs].sort(() => Math.random() - 0.5));
+                setRightItems([...selectedPairs].sort(() => Math.random() - 0.5));
+                setMatched([]);
+                setSelectedLeft(null);
             }, [data]);
 
-            const handleLeftClick = (item) => { if (!matched.includes(item)) { setSelectedLeft(item); setWrongShake(false); } };
+            const handleLeftClick = (item) => { 
+                if (!matched.includes(item.left)) { 
+                    setSelectedLeft(item.left); setWrongShake(false); 
+                } 
+            };
+            
             const handleRightClick = (item) => {
-                if (matched.includes(item) || !selectedLeft) return;
+                if (matched.includes(item.right) || !selectedLeft) return;
                 
-                // Allow matching by content (duplicate items support)
-                const isValidPair = data.pairs.some(p => p.left === selectedLeft && p.right === item);
+                const isValidPair = pairs.some(p => p.left === selectedLeft && p.right === item.right);
                 
                 if (isValidPair) {
                     if (soundEnabled) playSound('correct');
-                    const newMatched = [...matched, selectedLeft, item];
-                    setMatched(newMatched); setSelectedLeft(null);
+                    const newMatched = [...matched, selectedLeft, item.right];
+                    setMatched(newMatched); 
+                    setSelectedLeft(null);
                     
                     if ('speechSynthesis' in window) {
                         window.speechSynthesis.cancel();
-                        const text = `${selectedLeft}, ${item}`;
+                        const text = `${selectedLeft}, ${item.right}`;
                         const u = new SpeechSynthesisUtterance(text);
                         u.lang = 'zh-CN'; u.rate = 0.9;
                         window.speechSynthesis.speak(u);
                     }
 
-                    if (newMatched.length === pairs.length * 2) setTimeout(() => onComplete(pairs.length), 1000);
+                    if (newMatched.length === pairs.length * 2) setTimeout(() => onComplete(pairs.length, pairs.length), 1000);
                 } else {
                     if (soundEnabled) playSound('wrong');
-                    
-                    const correctRight = data.pairs.find(p => p.left === selectedLeft)?.right;
+                    const correctRight = pairs.find(p => p.left === selectedLeft)?.right;
                     onWrong({
                         question: `连线：${selectedLeft}`,
                         correct: correctRight,
-                        yourAnswer: item
+                        yourAnswer: item.right
                     });
-
                     setWrongShake(true); setTimeout(() => setWrongShake(false), 500); setSelectedLeft(null);
                 }
             };
+
+            if (pairs.length === 0) return null;
 
             return (
                 <div className="flex flex-col items-center h-full w-full max-w-4xl mx-auto px-4">
@@ -769,12 +865,12 @@
                     <div className="flex justify-between w-full gap-8 md:gap-12 flex-1 overflow-y-auto p-2">
                         <div className="flex-1 flex flex-col gap-3 md:gap-4">
                             {leftItems.map((item, idx) => (
-                                <button key={idx} onClick={() => handleLeftClick(item)} className={`p-3 md:p-4 rounded-xl text-lg font-bold shadow-sm border-2 transition-all duration-200 ${matched.includes(item) ? 'bg-gray-50 text-gray-300 border-gray-100 cursor-default scale-95' : 'bg-white text-blue-600 border-blue-100 hover:border-blue-400 hover:shadow-md'} ${selectedLeft === item ? 'bg-blue-50 border-blue-500 scale-105 ring-2 ring-blue-200' : ''}`}>{item}</button>
+                                <button key={`l_${idx}`} onClick={() => handleLeftClick(item)} className={`p-3 md:p-4 rounded-xl text-lg font-bold shadow-sm border-2 transition-all duration-200 ${matched.includes(item.left) ? 'bg-gray-50 text-gray-300 border-gray-100 cursor-default scale-95' : 'bg-white text-blue-600 border-blue-100 hover:border-blue-400 hover:shadow-md'} ${selectedLeft === item.left ? 'bg-blue-50 border-blue-500 scale-105 ring-2 ring-blue-200' : ''}`}>{item.left}</button>
                             ))}
                         </div>
                         <div className="flex-1 flex flex-col gap-3 md:gap-4">
                             {rightItems.map((item, idx) => (
-                                <button key={idx} onClick={() => handleRightClick(item)} className={`p-3 md:p-4 rounded-xl text-lg font-bold shadow-sm border-2 transition-all duration-200 ${matched.includes(item) ? 'bg-green-50 text-green-300 border-green-100 cursor-default scale-95' : 'bg-white text-green-700 border-green-100 hover:border-green-400 hover:shadow-md'} ${wrongShake ? 'animate-shake bg-red-50 border-red-300' : ''}`}>{item}</button>
+                                <button key={`r_${idx}`} onClick={() => handleRightClick(item)} className={`p-3 md:p-4 rounded-xl text-lg font-bold shadow-sm border-2 transition-all duration-200 ${matched.includes(item.right) ? 'bg-green-50 text-green-300 border-green-100 cursor-default scale-95' : 'bg-white text-green-700 border-green-100 hover:border-green-400 hover:shadow-md'} ${wrongShake ? 'animate-shake bg-red-50 border-red-300' : ''}`}>{item.right}</button>
                             ))}
                         </div>
                     </div>
@@ -806,8 +902,8 @@
                     }
 
                     if (currentLineIdx < data.lines.length - 1) {
-                        setTimeout(() => setCurrentLineIdx(currentLineIdx + 1), 3500); 
-                    } else { setTimeout(() => onComplete(data.lines.length), 3500); }
+                        setTimeout(() => setCurrentLineIdx(currentLineIdx + 1), 2500); 
+                    } else { setTimeout(() => onComplete(data.lines.length, data.lines.length), 2500); }
                 } else { 
                     if (soundEnabled) playSound('wrong'); 
                     onWrong({
@@ -852,15 +948,11 @@
             const [soundEnabled, setSoundEnabled] = useState(true);
             const [wrongAnswers, setWrongAnswers] = useState([]);
 
-            // Load wrong answers from localStorage
             useEffect(() => {
                 const saved = localStorage.getItem('unit_quiz_wrong_answers');
-                if (saved) {
-                    setWrongAnswers(JSON.parse(saved));
-                }
+                if (saved) { setWrongAnswers(JSON.parse(saved)); }
             }, []);
 
-            // Save wrong answers to localStorage
             useEffect(() => {
                 localStorage.setItem('unit_quiz_wrong_answers', JSON.stringify(wrongAnswers));
             }, [wrongAnswers]);
@@ -871,30 +963,20 @@
                 return () => clearInterval(interval);
             }, [timerRunning]);
 
-            // Handler to record wrong answer
             const handleRecordWrong = (wrongData) => {
-                setWrongAnswers(prev => [
-                    ...prev, 
-                    { ...wrongData, unitTitle: activeUnit.title, timestamp: Date.now() }
-                ]);
+                setWrongAnswers(prev => [...prev, { ...wrongData, unitTitle: activeUnit.title, timestamp: Date.now() }]);
             };
 
             const handleClearWrong = () => {
-                if(confirm('确定要清空所有错题吗？')) {
-                    setWrongAnswers([]);
-                }
+                if(confirm('确定要清空所有错题吗？')) { setWrongAnswers([]); }
             };
 
             const handleSelectUnit = (unit) => { setActiveUnit(unit); setView('start'); };
             const handleStartGame = () => { setView('playing'); setCurrentStageIdx(0); setTotalScore(0); setMaxScore(0); setElapsedTime(0); setTimerRunning(true); if (soundEnabled) playSound('pass'); };
             
-            const handleStageComplete = (scoreForStage) => {
-                const stage = activeUnit.stages[currentStageIdx];
-                let stageMax = 0;
-                if (stage.type === 'choice') stageMax = stage.questions.length;
-                if (stage.type === 'match') stageMax = stage.pairs.length;
-                if (stage.type === 'poem') stageMax = stage.lines.length;
-                setTotalScore(prev => prev + scoreForStage); setMaxScore(prev => prev + stageMax);
+            const handleStageComplete = (scoreForStage, maxScoreForStage) => {
+                setTotalScore(prev => prev + scoreForStage); 
+                setMaxScore(prev => prev + maxScoreForStage);
                 if (currentStageIdx < activeUnit.stages.length - 1) {
                     if (soundEnabled) playSound('pass'); setCurrentStageIdx(prev => prev + 1);
                 } else { setTimerRunning(false); setView('result'); }
@@ -902,17 +984,14 @@
 
             const handleBackToMenu = () => { setView('menu'); setActiveUnit(null); setTimerRunning(false); };
 
-            // Safety redirect
             useEffect(() => {
-                if (view !== 'menu' && view !== 'wrongBook' && !activeUnit) {
-                    setView('menu');
-                }
+                if (view !== 'menu' && view !== 'wrongBook' && !activeUnit) { setView('menu'); }
             }, [view, activeUnit]);
 
             return (
                 <div className="min-h-screen flex items-center justify-center p-4">
                     <div className="w-full max-w-4xl bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col h-[90vh] border border-gray-200 relative">
-                        {/* Top Bar - only in playing mode */}
+                        {/* Top Bar */}
                         {view === 'playing' && activeUnit && (
                             <div className={`bg-gradient-to-r ${activeUnit.color} text-white p-4 flex justify-between items-center shadow-md z-10 shrink-0`}>
                                 <div className="flex items-center gap-3">
