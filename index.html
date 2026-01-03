@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>三年级上册语文互动闯关平台 V16.0 (终极无忧版)</title>
-    <!-- 引入 React 和 Tailwind CSS -->
+    <title>三年级上册语文互动闯关平台 V16.6 (完整题库修复版)</title>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -152,7 +151,7 @@
         };
 
         // ==========================================
-        // 3. 核心数据 (UNIT_DATABASE)
+        // 3. 核心数据库 (UNIT_DATABASE)
         // ==========================================
         const UNIT_DATABASE = [
             {
@@ -802,75 +801,69 @@
         };
 
         const MatchStage = ({ data, onComplete, soundEnabled, onWrong }) => {
-            const [pairs, setPairs] = useState([]);
-            const [leftItems, setLeftItems] = useState([]);
-            const [rightItems, setRightItems] = useState([]);
             const [selectedLeft, setSelectedLeft] = useState(null);
-            const [matched, setMatched] = useState([]); 
+            const [matched, setMatched] = useState([]);
             const [wrongShake, setWrongShake] = useState(false);
 
-            useEffect(() => {
-                const count = data.count || 6; 
-                const selectedPairs = getRandomSubset(data.pairs, count);
-                setPairs(selectedPairs);
-                setLeftItems([...selectedPairs].sort(() => Math.random() - 0.5));
-                setRightItems([...selectedPairs].sort(() => Math.random() - 0.5));
-                setMatched([]);
-                setSelectedLeft(null);
+            // 逻辑修复：强制提取唯一值，防止一对多导致锁死
+            const items = useMemo(() => {
+                const count = data.count || 6;
+                let rawPairs = shuffleArray(data.pairs);
+                
+                // 动态去重：确保在这一轮游戏中，左侧和右侧的词都不重复
+                const selectedPairs = [];
+                const usedL = new Set();
+                const usedR = new Set();
+                
+                for (let p of rawPairs) {
+                    if (!usedL.has(p.left) && !usedR.has(p.right)) {
+                        selectedPairs.push(p);
+                        usedL.add(p.left);
+                        usedR.add(p.right);
+                    }
+                    if (selectedPairs.length >= count) break;
+                }
+
+                // 洗牌展示
+                return {
+                    left: shuffleArray(selectedPairs.map(p => ({ val: p.left }))),
+                    right: shuffleArray(selectedPairs.map(p => ({ val: p.right }))),
+                    map: selectedPairs // 记录当前轮次的正确映射关系
+                };
             }, [data]);
 
-            const handleLeftClick = (item) => { 
-                if (!matched.includes(item.left)) { 
-                    setSelectedLeft(item.left); setWrongShake(false); 
-                } 
-            };
-            
-            const handleRightClick = (item) => {
-                if (matched.includes(item.right) || !selectedLeft) return;
+            const handleLeftClick = (val) => { if (!matched.includes(val)) setSelectedLeft(val); };
+            const handleRightClick = (val) => {
+                if (!selectedLeft || matched.includes(val)) return;
                 
-                const isValidPair = pairs.some(p => p.left === selectedLeft && p.right === item.right);
+                // 校验逻辑：检查当前选中对是否在 items.map 中存在
+                const isCorrect = items.map.some(p => p.left === selectedLeft && p.right === val);
                 
-                if (isValidPair) {
+                if (isCorrect) {
                     if (soundEnabled) playSound('correct');
-                    const newMatched = [...matched, selectedLeft, item.right];
-                    setMatched(newMatched); 
-                    setSelectedLeft(null);
-                    
-                    if ('speechSynthesis' in window) {
-                        window.speechSynthesis.cancel();
-                        const text = `${selectedLeft}, ${item.right}`;
-                        const u = new SpeechSynthesisUtterance(text);
-                        u.lang = 'zh-CN'; u.rate = 0.9;
-                        window.speechSynthesis.speak(u);
-                    }
-
-                    if (newMatched.length === pairs.length * 2) setTimeout(() => onComplete(pairs.length, pairs.length), 1000);
+                    const newMatched = [...matched, selectedLeft, val];
+                    setMatched(newMatched); setSelectedLeft(null);
+                    speakText(`${selectedLeft}，${val}`);
+                    if (newMatched.length === items.map.length * 2) setTimeout(() => onComplete(items.map.length, items.map.length), 1000);
                 } else {
                     if (soundEnabled) playSound('wrong');
-                    const correctRight = pairs.find(p => p.left === selectedLeft)?.right;
-                    onWrong({
-                        question: `连线：${selectedLeft}`,
-                        correct: correctRight,
-                        yourAnswer: item.right
-                    });
+                    onWrong({ question: `连线：${selectedLeft}`, correct: items.map.find(p => p.left === selectedLeft)?.right, yourAnswer: val });
                     setWrongShake(true); setTimeout(() => setWrongShake(false), 500); setSelectedLeft(null);
                 }
             };
-
-            if (pairs.length === 0) return null;
 
             return (
                 <div className="flex flex-col items-center h-full w-full max-w-4xl mx-auto px-4">
                     <h3 className="text-xl text-gray-600 mb-6 mt-4 font-medium bg-white px-6 py-2 rounded-full shadow-sm">请点击左边的词，再点击右边连线</h3>
                     <div className="flex justify-between w-full gap-8 md:gap-12 flex-1 overflow-y-auto p-2">
                         <div className="flex-1 flex flex-col gap-3 md:gap-4">
-                            {leftItems.map((item, idx) => (
-                                <button key={`l_${idx}`} onClick={() => handleLeftClick(item)} className={`p-3 md:p-4 rounded-xl text-lg font-bold shadow-sm border-2 transition-all duration-200 ${matched.includes(item.left) ? 'bg-gray-50 text-gray-300 border-gray-100 cursor-default scale-95' : 'bg-white text-blue-600 border-blue-100 hover:border-blue-400 hover:shadow-md'} ${selectedLeft === item.left ? 'bg-blue-50 border-blue-500 scale-105 ring-2 ring-blue-200' : ''}`}>{item.left}</button>
+                            {items.left.map((it, idx) => (
+                                <button key={`l_${idx}`} onClick={() => handleLeftClick(it.val)} className={`p-3 md:p-4 rounded-xl text-lg font-bold shadow-sm border-2 transition-all duration-200 ${matched.includes(it.val) ? 'bg-gray-50 text-gray-300 border-gray-100 cursor-default scale-95' : 'bg-white text-blue-600 border-blue-100 hover:border-blue-400 hover:shadow-md'} ${selectedLeft === it.val ? 'bg-blue-50 border-blue-500 scale-105 ring-2 ring-blue-200' : ''}`}>{it.val}</button>
                             ))}
                         </div>
                         <div className="flex-1 flex flex-col gap-3 md:gap-4">
-                            {rightItems.map((item, idx) => (
-                                <button key={`r_${idx}`} onClick={() => handleRightClick(item)} className={`p-3 md:p-4 rounded-xl text-lg font-bold shadow-sm border-2 transition-all duration-200 ${matched.includes(item.right) ? 'bg-green-50 text-green-300 border-green-100 cursor-default scale-95' : 'bg-white text-green-700 border-green-100 hover:border-green-400 hover:shadow-md'} ${wrongShake ? 'animate-shake bg-red-50 border-red-300' : ''}`}>{item.right}</button>
+                            {items.right.map((it, idx) => (
+                                <button key={`r_${idx}`} onClick={() => handleRightClick(it.val)} className={`p-3 md:p-4 rounded-xl text-lg font-bold shadow-sm border-2 transition-all duration-200 ${matched.includes(it.val) ? 'bg-green-50 text-green-300 border-green-100 cursor-default scale-95' : 'bg-white text-green-700 border-green-100 hover:border-green-400 hover:shadow-md'} ${wrongShake && !matched.includes(it.val) ? 'animate-shake bg-red-50 border-red-300' : ''}`}>{it.val}</button>
                             ))}
                         </div>
                     </div>
@@ -981,6 +974,11 @@
                     if (soundEnabled) playSound('pass'); setCurrentStageIdx(prev => prev + 1);
                 } else { setTimerRunning(false); setView('result'); }
             };
+            
+            // 隐蔽跳过：点击“进度 X/Y”触发的逻辑，视为0分跳过
+            const handleSkipStage = () => {
+                 handleStageComplete(0, 0);
+            };
 
             const handleBackToMenu = () => { setView('menu'); setActiveUnit(null); setTimerRunning(false); };
 
@@ -1002,6 +1000,10 @@
                                     <div><h2 className="font-bold text-lg">{activeUnit.stages[currentStageIdx].title}</h2><p className="text-xs text-white opacity-90 hidden sm:block">{activeUnit.stages[currentStageIdx].description}</p></div>
                                 </div>
                                 <div className="flex items-center gap-4 md:gap-6">
+                                    {/* 隐蔽跳过入口：点击进度文字 */}
+                                    <div onClick={handleSkipStage} className="text-white/80 text-xs font-mono cursor-pointer hover:text-white select-none transition" title="点击跳过本关">
+                                        进度 {currentStageIdx + 1}/{activeUnit.stages.length}
+                                    </div>
                                     <div className="bg-black/20 rounded-full px-4 py-1 flex items-center gap-2 backdrop-blur-sm"><Clock size={16} className="text-yellow-300"/><span className="font-mono font-bold">{formatTime(elapsedTime)}</span></div>
                                     <button onClick={() => setSoundEnabled(!soundEnabled)} className="hover:bg-white/20 p-2 rounded-full transition">{soundEnabled ? <Volume2 size={20} color="white"/> : <VolumeX size={20} color="white"/>}</button>
                                 </div>
