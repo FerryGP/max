@@ -2,8 +2,9 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>数学答题卡(v1.8豪华完整版)</title>
+    <title>数学答题卡-三年级上(v1.9最终质检版)</title>
     <style>
+        /* 打印专用设置：强制背景打印，强制分页 */
         @media print {
             body { -webkit-print-color-adjust: exact; margin: 0; padding: 0; }
             .page-break { break-after: always; }
@@ -12,8 +13,8 @@
         }
         
         body {
-            font-family: "KaiTi", "Kaiti SC", "SimKai", serif;
-            background-color: #f0f0f0;
+            font-family: "KaiTi", "Kaiti SC", "SimKai", serif; /* 楷体 */
+            background-color: #555; /* 预览背景深色，突出纸张 */
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -22,19 +23,19 @@
             color: #000;
         }
 
-        /* 容器样式 */
+        /* 纸张容器：A4标准 */
         .sheet {
             width: 210mm;
             min-height: 297mm; 
             background: white;
             position: relative;
-            padding: 15mm 20mm; /* 边距适中 */
+            padding: 15mm 20mm;
             box-sizing: border-box;
             margin-bottom: 20px;
-            box-shadow: 0 0 8px rgba(0,0,0,0.1);
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
         }
 
-        /* 定位点 */
+        /* 阅卷定位点 */
         .mark { width: 6mm; height: 4mm; background: black; position: absolute; }
         .mark-tl { top: 10mm; left: 10mm; }
         .mark-tr { top: 10mm; right: 10mm; }
@@ -56,8 +57,8 @@
             flex-direction: column;
         }
 
-        /* 头部样式 */
-        .header { text-align: center; margin-bottom: 25px; margin-top: 10px; }
+        /* 头部样式：新版无准考证号 */
+        .header { text-align: center; margin-bottom: 20px; margin-top: 10px; }
         .header h1 { 
             font-family: "SimHei", sans-serif; 
             font-size: 20pt; 
@@ -81,7 +82,7 @@
             margin-bottom: 4px;
         }
 
-        /* 题目样式 */
+        /* 题目通用样式 */
         .section-header {
             font-family: "SimHei", sans-serif;
             font-size: 14pt;
@@ -93,15 +94,17 @@
             border-left: 6px solid #000;
         }
         .q-item { font-size: 13pt; margin-bottom: 25px; line-height: 1.8; }
+        
+        /* 填空题横线 */
         .blank-line {
             display: inline-block;
             border-bottom: 1px solid #000;
-            min-width: 100px; /* 填空线拉长 */
+            min-width: 100px; 
             height: 24px;
             margin: 0 8px;
         }
 
-        /* Q6 作图大网格 */
+        /* Q6 作图大网格 (实线) */
         .grid-bg {
             width: 100%;
             background-image: 
@@ -111,15 +114,25 @@
             border: 1px solid #000;
         }
 
-        /* Q22 说明理由专用网格 (带虚线感) */
+        /* Q22 专用虚线网格 (模仿截图效果) */
         .grid-dashed {
             width: 100%;
             height: 100%;
+            /* 虚线效果模拟 */
             background-image: 
-                linear-gradient(#333 1px, transparent 1px),
-                linear-gradient(90deg, #333 1px, transparent 1px);
-            background-size: 30px 30px; /* 约1cm */
-            background-position: -1px -1px;
+                linear-gradient(to right, #333 40%, rgba(255,255,255,0) 0%),
+                linear-gradient(to bottom, #333 40%, rgba(255,255,255,0) 0%);
+            background-position: bottom left;
+            background-size: 40px 1px, 1px 40px; /* 控制虚线间距 */
+            background-repeat: repeat-x, repeat-y;
+        }
+        /* 为了更像格子，叠加一层完整的网格 */
+        .grid-dashed-overlay {
+            width: 100%; height: 100%;
+            background-image: 
+                linear-gradient(#666 1px, transparent 1px),
+                linear-gradient(90deg, #666 1px, transparent 1px);
+            background-size: 38px 38px; /* 约1cm */
             border: 1px solid #000;
         }
 
@@ -128,8 +141,8 @@
         .color-strip {
             display: flex;
             border: 1px solid #000;
-            width: 480px; 
-            height: 40px; /* 加高方便涂色 */
+            width: 456px; /* 12 * 38px */
+            height: 38px;
             margin-bottom: 10px;
         }
         .strip-cell { flex: 1; border-right: 1px solid #000; }
@@ -138,19 +151,14 @@
         /* 选择题 */
         .choice-block { display: inline-block; width: 45%; margin-bottom: 15px; font-family: Arial; font-size: 12pt; }
         
-        /* 计算题 (大空间) */
+        /* 计算题 */
         .calc-row { display: flex; flex-wrap: wrap; gap: 20px; }
         .calc-box {
-            width: 47%; 
-            height: 180px; /* 竖式空间加高 */
-            border: 1px solid #999; 
-            padding: 10px; 
-            box-sizing: border-box;
-            font-size: 12pt; 
-            position: relative;
+            width: 47%; height: 180px; border: 1px solid #999; padding: 10px; box-sizing: border-box;
+            font-size: 12pt; position: relative;
         }
 
-        /* 应用题文字与留白 */
+        /* 应用题 */
         .wp-text { font-family: "SimHei", sans-serif; font-weight: bold; margin-bottom: 12px; font-size: 12pt; }
         .wp-area { height: 140px; border-bottom: 1px dashed #bbb; margin-bottom: 25px; }
 
@@ -325,14 +333,20 @@
                     
                     <div style="margin-top:12px;">请用你喜欢的方式来说明理由。（可以用画一画、写一写、算一算等方式）</div>
                     
-                    <div style="position: relative; width: 320px; height: 160px; margin: 15px auto;">
-                        <div class="grid-dashed" style="width:100%; height:100%;"></div>
-                        <div style="position: absolute; right: -35px; top: 50%; transform: translateY(-50%); font-size: 9pt;">1cm <br> } </div>
-                        <div style="position: absolute; bottom: -20px; right: 0; font-size: 9pt;">1cm </div>
+                    <div style="position: relative; width: 304px; height: 152px; margin: 15px auto;">
+                        <div class="grid-dashed-overlay"></div>
+                        <div style="position: absolute; right: -40px; top: 50%; transform: translateY(-50%); font-size: 10pt; text-align:center; line-height:1;">
+                            1cm<br>
+                            <span style="font-size:18pt; font-weight:lighter;">}</span>
+                        </div>
+                        <div style="position: absolute; bottom: -25px; right: 0; font-size: 10pt; text-align:center; width:38px;">
+                            <div style="border-top:1px solid #000; height:4px; border-left:1px solid #000; border-right:1px solid #000; margin-bottom:2px;"></div>
+                            1cm
+                        </div>
                     </div>
                 </div>
 
-                <div style="margin-top: 25px; padding: 10px; background: #fff; border: 1px solid #ccc;">
+                <div style="margin-top: 25px; padding: 10px; background: #fff; border: 1px dashed #999;">
                     <div style="font-weight:bold;">(3) 小亮的问题：用同样个数的小正方形，拼出的长方形周长为什么不同？</div>
                     <div style="margin-top:5px; color:#666; font-size:11pt;">请在下方尝试回答：</div>
                     <span class="input-underline" style="margin-top:30px; width: 100%;"></span>
