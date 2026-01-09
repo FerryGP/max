@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>数学答题卡 - 2024-2025学年东城区三年级上学期期末</title>
+    <style>
+        /* 全局打印设置 */
+        @media print {
+            body { -webkit-print-color-adjust: exact; margin: 0; padding: 0; }
+            .page-break { break-after: page; }
+            .no-print { display: none; }
+        }
+        
+        body {
+            font-family: "SimHei", "Heiti SC", sans-serif;
+            background-color: #f0f0f0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            padding: 20px;
+        }
+
+        /* 模拟 A4 纸张 */
+        .sheet {
+            width: 210mm;
+            height: 297mm;
+            background: white;
+            position: relative;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            padding: 15mm 10mm;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+
+        /* 定位点 Mark (机器阅卷用) */
+        .mark {
+            width: 6mm;
+            height: 4mm;
+            background: black;
+            position: absolute;
+        }
+        .mark-tl { top: 10mm; left: 10mm; }
+        .mark-tr { top: 10mm; right: 10mm; }
+        .mark-bl { bottom: 10mm; left: 10mm; }
+        .mark-br { bottom: 10mm; right: 10mm; }
+
+        /* 答题卡大红框/黑框 */
+        .main-border {
+            border: 2px solid #000;
+            height: 100%;
+            padding: 5px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* 头部信息 */
+        .header {
+            text-align: center;
+            border-bottom: 1px solid #000;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+        }
+        .header h1 {
+            font-size: 16pt;
+            margin: 0 0 10px 0;
+            font-weight: bold;
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            font-size: 10pt;
+        }
+        .info-inputs {
+            width: 60%;
+        }
+        .input-line {
+            border-bottom: 1px solid #000;
+            display: inline-block;
+            width: 80px;
+            margin-right: 10px;
+        }
+
+        /* 准考证号区 */
+        .ticket-area {
+            border: 1px solid #000;
+            padding: 5px;
+            display: flex;
+        }
+        .barcode-box {
+            border: 1px dashed #999;
+            width: 100px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+            font-size: 9pt;
+            margin-right: 10px;
+        }
+        .ticket-grid {
+            display: flex;
+            flex-direction: column;
+        }
+        .ticket-title { font-size: 9pt; text-align: center; margin-bottom: 2px; }
+        .grid-row { display: flex; }
+        .grid-cell {
+            width: 14px;
+            height: 10px;
+            border: 1px solid #333;
+            font-size: 7pt;
+            text-align: center;
+            line-height: 10px;
+            margin: 1px;
+        }
+
+        /* 题目通用样式 */
+        .section-title {
+            font-weight: bold;
+            font-size: 12pt;
+            margin: 10px 0 5px 0;
+            background-color: #eee;
+            padding: 2px 5px;
+        }
+        .question-block {
+            margin-bottom: 8px;
+            font-size: 11pt;
+        }
+        .question-line {
+            border-bottom: 1px solid #000;
+            display: inline-block;
+            width: 100%;
+            height: 18px;
+        }
+
+        /* 选择题填涂区 */
+        .choice-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        .choice-num { width: 30px; font-weight: bold; }
+        .choice-opt {
+            border: 1px solid #000;
+            padding: 0 2px;
+            margin-right: 10px;
+            font-size: 9pt;
+            width: 16px;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        /* 网格背景 (CSS 绘制) */
+        .grid-box {
+            width: 100%;
+            height: 120px;
+            border: 1px solid #000;
+            /* 1cm 约为 38px, 这里用 CSS gradient 模拟 */
+            background-image: 
+                linear-gradient(#ccc 1px, transparent 1px),
+                linear-gradient(90deg, #ccc 1px, transparent 1px);
+            background-size: 38px 38px;
+            background-position: -1px -1px;
+            position: relative;
+        }
+
+        /* 计算题区域 */
+        .calc-container {
+            display: flex;
+            flex-wrap: wrap;
+            border: 1px solid #000;
+        }
+        .calc-box {
+            width: 50%;
+            height: 100px;
+            border: 1px solid #000;
+            box-sizing: border-box;
+            padding: 5px;
+            position: relative;
+        }
+        .calc-split {
+            display: flex;
+            height: 100%;
+        }
+        .calc-part { flex: 1; border-right: 1px dashed #999; }
+        .calc-part:last-child { border-right: none; }
+        .calc-label { font-size: 9pt; color: #666; margin-bottom: 5px;}
+
+        /* 页脚 */
+        .footer {
+            text-align: center;
+            font-size: 9pt;
+            margin-top: auto;
+            padding-top: 5px;
+        }
+        
+        /* 解决问题区域 */
+        .solution-box {
+            border: 1px solid #999;
+            height: 80px; /* 默认高度 */
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sheet">
+        <div class="mark mark-tl"></div><div class="mark mark-tr"></div>
+        <div class="mark mark-bl"></div><div class="mark mark-br"></div>
+
+        <div class="main-border">
+            <div class="header">
+                <h1>2024-2025 学年东城区三年级上学期期末试卷 数学答题卡</h1>
+                <div class="info-row">
+                    <div class="info-inputs">
+                        学校:<span class="input-line"></span> 
+                        班级:<span class="input-line" style="width:50px"></span>
+                        姓名:<span class="input-line"></span>
+                        <br><br>
+                        考场:<span class="input-line" style="width:50px"></span>
+                        座号:<span class="input-line" style="width:50px"></span>
+                    </div>
+                    <div class="ticket-area">
+                        <div class="barcode-box">贴条形码区</div>
+                        <div class="ticket-grid">
+                            <div class="ticket-title">准考证号</div>
+                            <div class="grid-row"><div class="grid-cell"></div><div class="grid-cell"></div><div class="grid-cell"></div><div class="grid-cell"></div><div class="grid-cell"></div><div class="grid-cell"></div><div class="grid-cell"></div><div class="grid-cell"></div><div class="grid-cell"></div></div>
+                            <div class="grid-row" style="font-size:6pt; color:#999; margin-left:2px;">[0] [0] [0] [0] [0] [0] [0] [0] [0]</div>
+                            <div class="grid-row" style="font-size:6pt; color:#999; margin-left:2px;">[1] [1] [1] [1] [1] [1] [1] [1] [1]</div>
+                        </div>
+                    </div>
+                </div>
+                <div style="font-size: 8pt; margin-top:5px; border:1px solid #000; padding:2px;">
+                    注意事项：1. 选择题请用2B铅笔填涂；2. 非选择题请用黑色签字笔书写；3. 保持卡面清洁。
+                </div>
+            </div>
+
+            <div class="section-title">一、填空题 (每空1分，共计X分)</div>
+            <div class="question-block">
+                1. __________________ ; __________________ <br><br>
+                2. __________________ ; __________________ ; __________________ <br><br>
+                3. __________________ ; __________________ <br><br>
+                4. __________________ ; __________________ ; __________________ <br><br>
+                5. __________________
+            </div>
+
+            <div class="section-title">二、作图题 (请在网格内作答)</div>
+            <div class="question-block">
+                6. 画一个周长是16厘米的长方形：
+                <div class="grid-box" style="height: 100px;"></div>
+            </div>
+
+            <div class="section-title">三、选择题 (请用2B铅笔填涂)</div>
+            <div style="display: flex; flex-wrap: wrap;">
+                <div style="width: 50%;">
+                    <div class="choice-row"><span class="choice-num">7</span> [A] [B] [C] [D]</div>
+                    <div class="choice-row"><span class="choice-num">8</span> [A] [B] [C] [D]</div>
+                    <div class="choice-row"><span class="choice-num">9</span> [A] [B] [C] [D]</div>
+                    <div class="choice-row"><span class="choice-num">10</span> [A] [B] [C] [D]</div>
+                </div>
+                <div style="width: 50%;">
+                    <div class="choice-row"><span class="choice-num">11</span> [A] [B] [C] [D]</div>
+                    <div class="choice-row"><span class="choice-num">12</span> [A] [B] [C] [D]</div>
+                    <div class="choice-row"><span class="choice-num">13</span> [A] [B] [C] [D]</div>
+                    <div class="choice-row"><span class="choice-num">14</span> [A] [B] [C] [D]</div>
+                </div>
+            </div>
+
+            <div class="section-title">四、计算题 (请书写计算过程)</div>
+            <div class="calc-container">
+                <div class="calc-box">
+                    <span class="choice-num">15.(1)</span> 256 + 24 =
+                </div>
+                <div class="calc-box">
+                    <div class="calc-split">
+                        <div class="calc-part" style="flex:2;">
+                            <span class="choice-num">15.(2)</span> *602 - 357 =
+                        </div>
+                        <div class="calc-part" style="flex:1;">
+                            <div class="calc-label" style="text-align: center;">验算</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="calc-box">
+                    <span class="choice-num">15.(3)</span> 362 × 7 =
+                </div>
+                <div class="calc-box">
+                    <span class="choice-num">15.(4)</span> 450 × 8 =
+                </div>
+            </div>
+
+            <div class="footer">数学答题卡 第 1 页 共 2 页</div>
+        </div>
+    </div>
+
+    <div class="page-break"></div>
+
+    <div class="sheet">
+        <div class="mark mark-tl"></div><div class="mark mark-tr"></div>
+        <div class="mark mark-bl"></div><div class="mark mark-br"></div>
+
+        <div class="main-border">
+            <div class="section-title">五、按要求完成下面各题</div>
+            
+            <div class="question-block">
+                <div style="margin-bottom:5px;">16. 画一条长6厘米8毫米的线段：</div>
+                <div style="height: 40px; border-bottom: 1px dashed #ccc;"></div>
+            </div>
+            
+            <div class="question-block" style="margin-top:10px;">
+                17. 
+                (1) _________ 倍<br><br>
+                (2) 请在下方框内按要求涂色：
+                <div style="display: flex; gap:10px; margin: 5px 0;">
+                     <div style="border:1px solid #000; height:20px; width:45%; display:flex;">
+                         <div style="flex:1; border-right:1px solid #ccc;"></div><div style="flex:1; border-right:1px solid #ccc;"></div><div style="flex:1; border-right:1px solid #ccc;"></div><div style="flex:1; border-right:1px solid #ccc;"></div><div style="flex:1; border-right:1px solid #ccc;"></div><div style="flex:1; border-right:1px solid #ccc;"></div><div style="flex:1; border-right:1px solid #ccc;"></div><div style="flex:1;"></div>
+                     </div>
+                     <div style="border:1px solid #000; height:20px; width:45%; display:flex;">
+                         <div style="flex:1; border-right:1px solid #ccc;"></div><div style="flex:1; border-right:1px solid #ccc;"></div><div style="flex:1; border-right:1px solid #ccc;"></div><div style="flex:1; border-right:1px solid #ccc;"></div><div style="flex:1; border-right:1px solid #ccc;"></div><div style="flex:1; border-right:1px solid #ccc;"></div><div style="flex:1; border-right:1px solid #ccc;"></div><div style="flex:1;"></div>
+                     </div>
+                </div>
+                (3) 提出的数学问题：__________________________________________________
+            </div>
+
+            <div class="section-title">六、解决问题 (请写出主要计算过程和答语)</div>
+            
+            <div class="question-block">
+                18. (分蛋糕问题)
+                <div class="solution-box"></div>
+            </div>
+            
+            <div class="question-block">
+                19. (录入文章问题)
+                <div class="solution-box"></div>
+            </div>
+
+            <div class="question-block">
+                20. (买橡皮问题)
+                <div class="solution-box"></div>
+            </div>
+
+            <div class="question-block">
+                21. (运煤方案问题) <span style="font-size:9pt; color:#666;">请圈出选择的方法并在下方解答</span>
+                <div style="margin: 5px 0;">
+                    [ A 尝试 ] &nbsp;&nbsp; [ B 画图 ] &nbsp;&nbsp; [ C 列表 ] &nbsp;&nbsp; [ D 列式 ]
+                </div>
+                <div class="solution-box" style="height: 100px;"></div>
+            </div>
+
+            <div class="question-block">
+                22. (拼长方形问题)
+                <br>
+                (1) 小明拼出的周长是 ______ 厘米，小华拼出的周长是 ______ 厘米。
+                <br><br>
+                (2) 你同意小丽的想法吗？ [ &nbsp;&nbsp; ] 同意 &nbsp;&nbsp;&nbsp; [ &nbsp;&nbsp; ] 不同意
+                <br>
+                请用画一画、写一写或算一算的方式说明理由：
+                <div class="grid-box" style="height: 140px; margin-top:5px;"></div>
+            </div>
+
+            <div class="footer">数学答题卡 第 2 页 共 2 页</div>
+        </div>
+    </div>
+
+</body>
+</html>
