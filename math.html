@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>数学期末答题卡-三年级上(修正版)</title>
+    <title>数学期末答题卡-三年级上(终极版)</title>
     <style>
         @media print {
             body { -webkit-print-color-adjust: exact; margin: 0; padding: 0; }
@@ -12,7 +12,7 @@
         }
         
         body {
-            font-family: "KaiTi", "Kaiti SC", "SimKai", serif; /* 楷体，更贴近小学试卷风格 */
+            font-family: "KaiTi", "Kaiti SC", "SimKai", serif;
             background-color: #f0f0f0;
             display: flex;
             flex-direction: column;
@@ -33,14 +33,12 @@
             box-shadow: 0 0 8px rgba(0,0,0,0.1);
         }
 
-        /* 阅卷定位点 Mark */
         .mark { width: 6mm; height: 4mm; background: black; position: absolute; }
         .mark-tl { top: 10mm; left: 10mm; }
         .mark-tr { top: 10mm; right: 10mm; }
         .mark-bl { bottom: 10mm; left: 10mm; }
         .mark-br { bottom: 10mm; right: 10mm; }
 
-        /* 答题卡外框 */
         .main-border {
             border: 2px solid #000;
             height: 100%;
@@ -56,7 +54,6 @@
             flex-direction: column;
         }
 
-        /* 头部信息区 */
         .header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 15px; }
         .header h1 { font-family: "SimHei", sans-serif; font-size: 16pt; margin: 0 0 15px 0; }
         
@@ -64,7 +61,6 @@
         .info-table td { padding: 4px 0; }
         .input-underline { border-bottom: 1px solid #000; display: inline-block; width: 95%; height: 18px; }
 
-        /* 准考证号区 */
         .ticket-section {
             display: flex;
             justify-content: flex-end;
@@ -84,7 +80,6 @@
             font-family: Arial;
         }
 
-        /* 题目通用样式 */
         .section-header {
             font-family: "SimHei", sans-serif;
             font-size: 12pt;
@@ -96,8 +91,6 @@
             border-left: 5px solid #000;
         }
         .q-item { font-size: 12pt; margin-bottom: 12px; line-height: 1.6; }
-        
-        /* 填空题横线 */
         .blank-line {
             display: inline-block;
             border-bottom: 1px solid #000;
@@ -106,10 +99,8 @@
             margin: 0 5px;
         }
 
-        /* 方格区域 (CSS绘制) */
         .grid-bg {
             width: 100%;
-            /* 1cm 约 38px */
             background-image: 
                 linear-gradient(#aaa 1px, transparent 1px),
                 linear-gradient(90deg, #aaa 1px, transparent 1px);
@@ -118,30 +109,25 @@
             position: relative;
         }
 
-        /* 17题涂色条 */
         .color-strip-container { margin: 10px 0; }
         .color-strip {
             display: flex;
             border: 1px solid #000;
-            width: 456px; /* 12格 x 38px */
+            width: 456px; 
             height: 30px;
             margin-bottom: 8px;
         }
         .strip-cell { flex: 1; border-right: 1px solid #000; }
         .strip-cell:last-child { border-right: none; }
 
-        /* 选择题 */
         .choice-block { display: inline-block; width: 24%; margin-bottom: 8px; font-family: Arial; }
-        .opt-box { border: 1px solid #000; padding: 0 3px; margin-right: 4px; font-size: 10pt; cursor: pointer; }
-
-        /* 计算题 */
+        
         .calc-row { display: flex; flex-wrap: wrap; gap: 10px; }
         .calc-box {
             width: 48%; height: 110px; border: 1px solid #999; padding: 5px; box-sizing: border-box;
             font-size: 11pt;
         }
 
-        /* 应用题文本 */
         .wp-text { font-family: "SimHei", sans-serif; font-weight: bold; margin-bottom: 5px; font-size: 11pt; }
         .wp-area { height: 100px; border-bottom: 1px dashed #bbb; margin-bottom: 15px; }
 
@@ -278,15 +264,45 @@
                     你选择的策略是(请打钩)：
                     [ &nbsp; ] 尝试 &nbsp;&nbsp; [ &nbsp; ] 画图 &nbsp;&nbsp; [ &nbsp; ] 列表 &nbsp;&nbsp; [ &nbsp; ] 列式
                 </div>
-                <div class="wp-area" style="height:120px;"></div>
+                <div class="wp-area" style="height:100px;"></div>
             </div>
 
             <div class="q-item" style="margin-bottom:0;">
-                <div class="wp-text">22. 小明和小华玩拼长方形游戏。</div>
-                (1) 小明拼出的长方形周长是 _____ 厘米，小华拼出的是 _____ 厘米。<br>
-                (2) 你同意小丽的想法吗？ [ &nbsp;&nbsp; ] 同意 &nbsp;&nbsp;&nbsp;&nbsp; [ &nbsp;&nbsp; ] 不同意<br>
-                <div style="font-size:10pt; margin-top:5px;">请在网格中说明理由：</div>
-                <div class="grid-bg" style="height: 120px; width: 100%; margin-top:5px;"></div>
+                <div class="wp-text">22. 小明和小华玩拼长方形游戏（如下图所示）：</div>
+                <div style="font-size: 10pt; color: #444; margin-bottom: 8px; background: #fff; padding: 5px; border: 1px solid #ccc;">
+                    <span style="margin-right:15px;">● 小明：我用了 <strong>7个</strong> 1厘米的小正方形（拼成一排）。</span><br>
+                    <span>● 小华：我用了 <strong>12个</strong> 1厘米的小正方形（拼成长4厘米、宽3厘米的长方形）。</span>
+                </div>
+
+                (1) 小明拼出的长方形周长是 <span class="blank-line" style="width:40px; min-width:40px; text-align:center;"></span> 厘米，小华拼出的长方形周长是 <span class="blank-line" style="width:40px; min-width:40px; text-align:center;"></span> 厘米。<br>
+                
+                <div style="margin-top: 10px; border: 1px solid #000; padding: 8px;">
+                    <div style="margin-bottom: 5px; font-weight: bold; font-size: 11pt;">
+                        (2) 小丽的想法：“小正方形的个数少，拼出的长方形周长一定短。”
+                    </div>
+                    
+                    <div style="margin: 8px 0;">
+                        你同意吗？ 
+                        <span style="display:inline-block; border:1px solid #000; width:12px; height:12px; margin-left:10px;"></span> 同意
+                        <span style="display:inline-block; border:1px solid #000; width:12px; height:12px; margin-left:20px;"></span> 不同意
+                    </div>
+                    <div style="font-size:10pt;">请你用画一画、写一写或算一算的方式说明理由：</div>
+                    <div class="grid-bg" style="height: 100px; width: 100%; margin-top:5px; border: 1px dashed #999;"></div>
+                </div>
+
+                <div style="margin-top: 15px; background-color: #f9f9f9; padding: 5px; border: 1px dashed #999;">
+                    <div style="font-weight:bold; font-size:11pt; margin-bottom:5px;">
+                        (3) 小亮也用12个小正方形拼了一个长方形，周长是16厘米。
+                    </div>
+                    <div>
+                        他发现了新问题：“用同样个数的小正方形，拼出的长方形的周长为什么不同呢？”<br>
+                        <span style="font-size:10pt; color:#666;">请你尝试回答小亮的问题：</span>
+                    </div>
+                    <div style="margin-top:5px;">
+                        <span class="input-underline" style="border-bottom: 1px solid #000; display:block; margin-bottom:10px;"></span>
+                        <span class="input-underline" style="border-bottom: 1px solid #000; display:block;"></span>
+                    </div>
+                </div>
             </div>
 
             <div style="margin-top: auto; text-align: center; font-size: 10pt;">第 2 页 (共 2 页)</div>
